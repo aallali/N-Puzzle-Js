@@ -1,0 +1,19 @@
+{
+  "name": "puzzly",
+  "version": "1.0.0",
+  "description": "n-puzzle project for 42 ciricculum",
+  "main": "src/index.js",
+  "scripts": {
+    "build": "babel src/index.js -d dist",
+    "start": "npm run build && node dist/index.js",
+    "dev": "nodemon --exec babel-node src/index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/cli": "^7.20.7",
+    "@babel/core": "^7.20.12",
+    "@babel/node": "^7.20.7",
+    "@babel/preset-env": "^7.20.2"
+  }
+}

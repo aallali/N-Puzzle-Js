@@ -1,14 +1,14 @@
 {
   "name": "puzzly",
   "version": "1.0.0",
-  "description": "n-puzzle project for 42 ciricculum",
+  "description": "n-puzzle its an app that use the A* algorithm with many heuristics to solve the slide puzzle",
   "main": "src/index.js",
   "scripts": {
-    "build": "babel src/index.js -d dist",
+    "build": "npx babel ./src --out-dir ./dist --source-maps --copy-files --compact auto --no-comments --verbose --delete-dir-on-start",
     "start": "npm run build && node dist/index.js",
-    "dev": "nodemon --exec babel-node src/index.js"
+    "dev": "npx nodemon  --watch src --exec babel-node src/index.js"
   },
-  "author": "",
+  "author": "Abdellah Allali",
   "license": "ISC",
   "devDependencies": {
     "@babel/cli": "^7.20.7",

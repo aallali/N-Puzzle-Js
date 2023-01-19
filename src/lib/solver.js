@@ -1,62 +1,56 @@
 import PQueue from "./priorityQueue"
-import { printPuzzle } from "../utils"
-
-const { log } = console;
- 
-function blok(s) {
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            resolve()
-        }, s * 1000)
-    })
-}
+import { BloomFilter } from "bloomfilter";
 
 export default class Solver {
     constructor(firstElement) {
-        this.visited = new Set()
+        this.visited = new BloomFilter(32 * 1024 * 40000, 32);
         this.queue = new PQueue()
         this.queue.enqueue(firstElement)
+        this.solution
 
     }
-    async buildScenario(solution) {
+    async buildScenario() {
         let steps = []
 
-        while (solution) {
-            steps.push([solution.puzzle, solution.score])
-            solution = solution.parent
+        while (this.solution) {
+            steps.push([this.solution.puzzle, this.solution.score])
+            this.solution = this.solution.parent
         }
         steps = steps.reverse()
-        for (let i = 0; i < steps.length; i++) {
-            console.clear()
-            printPuzzle(steps[i][0], steps[i][1])
-            log(`Step n: ${i+1}/${steps.length}`)
-            await blok(0.2)
-        }
-       
+        return steps
     }
 
     async start() {
         let count = 0
-        let solutionFound = false
-        while (!solutionFound && !this.queue.isEmpty()) {
+
+        const start = process.hrtime();
+        while (!this.solution && !this.queue.isEmpty()) {
             const currentPuzzle = this.queue.dequeue();
             currentPuzzle.wakeUpChilds()
             this.visited.add(currentPuzzle.hash)
+            count++
+
+            if (currentPuzzle.isFinal) {
+                this.solution = currentPuzzle
+                break
+            }
 
             for (let i = 0; i < currentPuzzle.childs.length; i++) {
                 const child = currentPuzzle.childs[i];
-                if (child.isFinal) {
-                    solutionFound = true
-                    this.buildScenario(child)
-                    break
-                }
-
-                if (!this.visited.has(child.hash)) {
+                if (!this.visited.test(child.hash))
                     this.queue.enqueue(child)
-                    this.visited.add(child.hash)
-                }
             }
-            count++
+        }
+        const time = process.hrtime(start)
+        const steps = await this.buildScenario()
+
+        return {
+            steps,
+            cTime : parseInt(this.visited.size()),
+            cSize : this.queue.maxOpen,
+            tONode: count,
+            time
+          
         }
     }
 }

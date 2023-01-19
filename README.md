@@ -1,4 +1,4 @@
-# n-puzzle-js
+## N-Puzzle (version: javascript)
     The goal of this project is to solve the N-puzzle ("taquin" in French) game using the A*
     search algorithm or one of its variants.
 
@@ -18,6 +18,9 @@
 
 ### Todo list
 - [x] add bloomFilter for the `visited set` for faster filtering than normal `new set`
+- [x] comment all code in all files.
+- [x] fix the greedy/uniform implementation
+- [x] simplify the implemention of greedy condition in lib/node.js
 - [ ] add more heuristics (> 4)
 - [ ] support using one or multiple heuristic
 - [ ] update the puzzle parser for more accuracy and error handling
@@ -26,3 +29,51 @@
 - [ ] create seprate method functions for the heuristics
 - [ ] pack all the Puzzle solver into one package
 - [ ] create an UI for n-puzzle using the package created in previous task
+
+### Run the code :
+```
+- npm install
+- npm run build
+- npm run dev
+```
+
+
+### Example of input/output:
+- input
+
+[ input file ] ----------------------------------------------
+```
+# This puzzle is solvable
+3
+1 3 5
+4 8 7
+0 2 6
+```
+[ Solver params ] -------------------------------------------
+```js
+const params = {
+    puzzle,
+    greedy: false, // true == ignore the treeLevel score
+    uniform: false, // true == ignore the heuristic score
+    heuristic: "manhattan" // the heuristic to use
+}
+```
+
+- output (npm run dev)
+```
+➜  n-puzzle-js git:(main) ✗ npm run start 
+================
+ 1  2  3 
+ 8  █  4 
+ 7  6  5   score: 18
+================
+Step n: 19/19
+---------------------------------------------
+        Steps to solution  : 19
+        complexity in time : 185
+        complexity in size : 141
+        Time spent :  0 s, 34.619 ms
+---------------------------------------------
+➜  n-puzzle-js git:(main) ✗
+
+```

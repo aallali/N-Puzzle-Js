@@ -13,7 +13,12 @@
 //-----OUTPUT :
 // [ [ '2', '1', '3' ], [ '8', '0', '4' ], [ '7', '6', '5' ] ]
 function parsePuzzle(inputFileTxt) {
-    return inputFileTxt.split("\n").filter(line => /^([\d+| ]+)(\d{1,2})+$/.test(line)).map(l => l.split(" ").filter(l => l))
+    return inputFileTxt
+        .split("\n")
+        .filter(line => /^([\d+| ]+)(\d{1,2})+$/.test(line))
+        .map(l => l
+            .split(" ")
+            .filter(l => l)).filter(l => l && l.length > 1)
 }
 
 export default parsePuzzle

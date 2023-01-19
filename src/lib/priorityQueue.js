@@ -6,6 +6,7 @@
 export default class PriorityQueue {
     constructor() {
         this.items = [];
+        this.maxOpen = 0
     }
     /**
      * 
@@ -25,6 +26,9 @@ export default class PriorityQueue {
         if (!contain) {
             this.items.push(elem);
         }
+
+        if (this.items.length > this.maxOpen)
+            this.maxOpen = this.items.length
     }
     /**
      * 

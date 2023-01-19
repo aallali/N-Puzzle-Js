@@ -16,9 +16,9 @@ async function main() {
 	// set the params which will be used in the solving algorithm
 	const params = {
 		puzzle,
-		greedy: false,
-		uniform: false,
-		heuristic: "manhattan"
+		greedy: false, // true == ignore the treeLevel score
+		uniform: false, // true == ignore the heuristic score
+		heuristic: "manhattan" // the heuristic to use
 	}
 
 	// generate new node of the this puzzle which will be the first puzzle in the solver
@@ -36,7 +36,7 @@ async function main() {
 	    console.clear()
 	    printPuzzle(steps[i][0], steps[i][1])
 	    log(`Step n: ${i + 1}/${steps.length}`)
-	    await blok(0.1)
+	    await blok(0.01)
 	}
 
 	// print required detailes about the solution asked in the subject pdf
@@ -44,7 +44,6 @@ async function main() {
 	log(`	Steps to solution  :`, solution.steps.length)
 	log("	complexity in time :", solution.cTime)
 	log("	complexity in size :", solution.cSize)
-	log("	Total nodes opened :", solution.tONode)
 	log("	Time spent : ", t.s,"s,", t.m, "ms")
 	log('---------------------------------------------')
 }

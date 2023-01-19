@@ -3,9 +3,15 @@ const { log } = console;
 export default class Node {
   constructor(puzzle, greedy, uniform, goal, parent, heuristic) {
     this.puzzle = puzzle;
-    this.treeLevel = greedy
-      ? 0
-      : (parent === undefined ? -1 : parent.treeLevel) + 1;
+
+    this.treeLevel = 0
+    if (!greedy) {
+      if (parent === undefined) // if parent undefined means its first element, so treeLevel should be 0
+        this.treeLevel = 0
+      else // means it's child node, so the treeLevel should equal to ()= parent Level + 1)
+        this.treeLevel = parent.treeLevel + 1
+    }
+;
     this.hash = this.toHash(this.puzzle);
     this.parent = parent && {
       parent: parent.parent,
@@ -16,15 +22,23 @@ export default class Node {
     this.goal = goal;
     this.isFinal = this.checkIfFinal();
     this.childs = [];
-    this.score = uniform ? 0 : this.treeLevel + this.calculateScore(heuristic);
-
+    this.score = this.treeLevel + (uniform ? 0 : this.calculateScore(heuristic)); // if uniform is true, heuristic score should be 0 (ignored)
+    // generate the params of childs if any, and keep them sleeping (param only without Node object)
     this.genChilds(uniform, greedy, heuristic);
   }
 
+  /**
+   * 
+   * @param {[][]} twoDarray 
+   * @returns from 2d arary to single string with all element of the array joined by dot "." 
+   */
   toHash(twoDarray) {
     return (twoDarray || this.puzzle).map((row) => row.join(".")).join(".");
   }
 
+  /**
+   * @output print puzzle to terminal
+   */
   show() {
     const score = this.score;
     let line = "";
@@ -71,6 +85,13 @@ export default class Node {
     return score;
   }
 
+  /**
+   * 
+   * @param {boolean} u 
+   * @param {boolean} g 
+   * @param {string} heuristic
+   * @output generate all the possible childrens from current puzzle by trying to move 0 tile to all direction
+   */
   genChilds(u, g, heuristic) {
     const moves = {
       right: { x: 0, y: 1 },
@@ -78,19 +99,31 @@ export default class Node {
       left: { x: 0, y: -1 },
       down: { x: 1, y: 0 },
     };
+    // find the index of 0 in the current puzzle
     const zeroIdx = this.findindexOf(this.puzzle, "0");
+    // loop through the moves directions
     for (const dir in moves) {
+      // generate new puzzle with possible move of '0'
+      // if the move is valid new puzzle will be returned
+      // if the move is invalid 'null' will be returned
       const newPuzzle = this.moveTile(
         zeroIdx,
         moves[dir],
         JSON.parse(JSON.stringify(this.puzzle))
       );
+
       if (newPuzzle) {
         this.childs.push([newPuzzle, g, u, heuristic]);
       }
     }
   }
-
+  /**
+   * 
+   * @param {[][]}} arr2D 
+   * @param {string} trgt 
+   * @returns {x: number, y: number} coordination of the trgt in arr2D if found
+   * @returns {undefined} if not found 
+   */
   findindexOf(arr2D, trgt) {
     const size = arr2D.length;
     for (let i = 0; i < size; i++) {
@@ -100,6 +133,13 @@ export default class Node {
     }
   }
 
+  /**
+   * 
+   * @param {x: number, y: number} tilePos 
+   * @param {x: number, y: number} direction 
+   * @param {[][]]} array2D 
+   * @returns new 2d array with tile at given position moved to direction given in the array2D given
+   */
   moveTile(tilePos, direction, array2D) {
     const array2DSize = array2D.length;
     if (
@@ -115,13 +155,18 @@ export default class Node {
     array2D[tilePos.x][tilePos.y] = tmp;
     return array2D;
   }
-
+  /**
+   * @output create new instance of Node class with the params of each element in childs
+   */
   wakeUpChilds() {
     this.childs = this.childs.map(
       (l) => new Node(l[0], l[1], l[2], this.goal, this, l[3])
     );
   }
-
+  /**
+   * 
+   * @returns {boolean} check if the current node is the final target we looking for
+   */
   checkIfFinal() {
     return this.hash == this.toHash(this.goal);;
   }

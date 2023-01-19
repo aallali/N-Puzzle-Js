@@ -5,7 +5,11 @@ function covertTo2dArr(arr, size) {
   }
   return result;
 }
-
+/**
+ * 
+ * @param {number} size 
+ * @returns final puzzle with 0 in the center
+ */
 export function generateSnailGoalPuzzle(size) {
   let proto = new Array(size * size).fill(0);
   let row = 0;
@@ -48,6 +52,11 @@ export function generateSnailGoalPuzzle(size) {
   return covertTo2dArr(proto.join().split(","), size);
 }
 
+/**
+ * 
+ * @param {number} size 
+ * @returns final puzzle with 0 in the start
+ */
 export function generateZeroFirstGoal(size) {
   let arr = [];
   let row = [];
@@ -60,6 +69,11 @@ export function generateZeroFirstGoal(size) {
   return arr;
 }
 
+/**
+ * 
+ * @param {number} size 
+ * @returns final puzzle with 0 in the end
+ */
 export function generateZeroLastGoal(size) {
   let arr = [];
   let row = [];

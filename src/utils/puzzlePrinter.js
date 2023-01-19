@@ -1,4 +1,10 @@
 
+/**
+ * 
+ * @param {[][]} map 
+ * @param {number|undefined} score
+ * @output print formatted puzzle to console 
+ */
 export default function printPuzzle(map, score) {
     const { log } = console;
     let line = ""

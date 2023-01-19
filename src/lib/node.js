@@ -7,11 +7,16 @@ export default class Node {
       ? 0
       : (parent === undefined ? -1 : parent.treeLevel) + 1;
     this.hash = this.toHash(this.puzzle);
-    this.parent = parent;
+    this.parent = parent && {
+      parent: parent.parent,
+      puzzle: parent.puzzle,
+      score: parent.score
+    };
+
     this.goal = goal;
     this.isFinal = this.checkIfFinal();
     this.childs = [];
-    this.score = uniform ? 0 : this.calculateScore(heuristic);
+    this.score = uniform ? 0 : this.treeLevel + this.calculateScore(heuristic);
 
     this.genChilds(uniform, greedy, heuristic);
   }

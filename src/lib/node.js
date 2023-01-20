@@ -8,7 +8,7 @@ export default class Node {
     if (!greedy) {
       if (parent === undefined) // if parent undefined means its first element, so treeLevel should be 0
         this.treeLevel = 0
-      else // means it's child node, so the treeLevel should equal to ()= parent Level + 1)
+      else // means it's child node, so the treeLevel should equal to (= parent.Level + 1)
         this.treeLevel = parent.treeLevel + 1
     }
 ;
@@ -23,6 +23,7 @@ export default class Node {
     this.isFinal = this.checkIfFinal();
     this.childs = [];
     this.score = this.treeLevel + (uniform ? 0 : this.calculateScore(heuristic)); // if uniform is true, heuristic score should be 0 (ignored)
+
     // generate the params of childs if any, and keep them sleeping (param only without Node object)
     this.genChilds(uniform, greedy, heuristic);
   }
@@ -61,6 +62,11 @@ export default class Node {
     }
     log("================");
   }
+  /**
+   * 
+   * @param {string} heuristic 
+   * @returns score value of current puzzle using algo of heuristic given.
+   */
   calculateScore(heuristic) {
     // manhattan
     let score = 0;
@@ -164,7 +170,6 @@ export default class Node {
     );
   }
   /**
-   * 
    * @returns {boolean} check if the current node is the final target we looking for
    */
   checkIfFinal() {

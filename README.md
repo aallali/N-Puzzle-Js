@@ -22,7 +22,14 @@
 - [x] fix the greedy/uniform implementation
 - [x] simplify the implemention of greedy condition in lib/node.js
 - [ ] add more heuristics (> 4)
-- [ ] support using one or multiple heuristic
+    - [x] `manhattan`
+    - [x] `linear conflicts` 
+    - [ ] `missplaced`
+    - [ ] `hamming`
+    - [ ] `gaschnig`
+    - [ ] `euclidean`
+    - [ ] `diagonal`
+- [x] support using one or multiple heuristic
 - [ ] update the puzzle parser for more accuracy and error handling
 - [ ] add solvability checker
 - [ ] config the solver to add type of target puzzle option (`zero last`, `zero first`, `snail`)
@@ -55,7 +62,7 @@ const params = {
     puzzle,
     greedy: false, // true == ignore the treeLevel score
     uniform: false, // true == ignore the heuristic score
-    heuristic: "manhattan" // the heuristic to use
+    heuristic: ["manhattan", "linearConflicts"] // the heuristic to use
 }
 ```
 
@@ -65,14 +72,14 @@ const params = {
 ================
  1  2  3 
  8  █  4 
- 7  6  5   score: 18
+ 7  6  5   score: 20
 ================
-Step n: 19/19
+Step n: 21/21
 ---------------------------------------------
-        Steps to solution  : 19
-        complexity in time : 185
-        complexity in size : 141
-        Time spent :  0 s, 34.619 ms
+        Steps to solution  : 21
+        complexity in time : 57
+        complexity in size : 55
+        Time spent :  0 s, 25.553 ms
 ---------------------------------------------
 ➜  n-puzzle-js git:(main) ✗
 

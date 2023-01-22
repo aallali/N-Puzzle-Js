@@ -1,7 +1,7 @@
 const { log } = console;
 
 export default class Node {
-  constructor(puzzle, greedy, uniform, goal, parent, heuristic) {
+  constructor(puzzle, greedy, uniform, goal, parent, heuristics) {
     this.puzzle = puzzle;
 
     this.treeLevel = 0
@@ -11,7 +11,7 @@ export default class Node {
       else // means it's child node, so the treeLevel should equal to (= parent.Level + 1)
         this.treeLevel = parent.treeLevel + 1
     }
-;
+    ;
     this.hash = this.toHash(this.puzzle);
     this.parent = parent && {
       parent: parent.parent,
@@ -22,10 +22,10 @@ export default class Node {
     this.goal = goal;
     this.isFinal = this.checkIfFinal();
     this.childs = [];
-    this.score = this.treeLevel + (uniform ? 0 : this.calculateScore(heuristic)); // if uniform is true, heuristic score should be 0 (ignored)
+    this.score = this.treeLevel + (uniform ? 0 : this.calculateScore(heuristics)); // if uniform is true, heuristic score should be 0 (ignored)
 
     // generate the params of childs if any, and keep them sleeping (param only without Node object)
-    this.genChilds(uniform, greedy, heuristic);
+    this.genChilds(uniform, greedy, heuristics);
   }
 
   /**
@@ -67,30 +67,56 @@ export default class Node {
    * @param {string} heuristic 
    * @returns score value of current puzzle using algo of heuristic given.
    */
-  calculateScore(heuristic) {
-    // manhattan
+  calculateScore(heuristics) {
     let score = 0;
-    const size = this.puzzle.length;
-
-    switch (heuristic) {
-      case "manhattan":
-        for (let i = 0; i < size; i++) {
-          for (let j = 0; j < size; j++) {
-            const currentTile = this.puzzle[i][j];
-            const tileInGoal = this.findindexOf(this.goal, currentTile);
-            let d1 = Math.abs(i - tileInGoal.x);
-            let d2 = Math.abs(j - tileInGoal.y);
-            score = score + d1 + d2;
-          }
-        }
-        break;
-      default:
-        break;
+    const heuristicsFunctions = {
+      "manhattan": this.heuristic_manhattan.bind(this),
+      "linearConflicts": () => this.heuristic_manhattan() + 2 * this.heuristic_linear_conflicts()
     }
+    heuristics.forEach(heuristic => {
+      score += heuristicsFunctions[heuristic]()
+    });
 
     return score;
   }
-
+  heuristic_manhattan() {
+    let distance = 0;
+    const size = this.puzzle.length;
+    for (let i = 0; i < size; i++) {
+      for (let j = 0; j < size; j++) {
+        const currentTile = this.puzzle[i][j];
+        const tileInGoal = this.findindexOf(this.goal, currentTile);
+        let d1 = Math.abs(i - tileInGoal.x);
+        let d2 = Math.abs(j - tileInGoal.y);
+        distance += + d1 + d2;
+      }
+    }
+    return distance
+  }
+  heuristic_linear_conflicts() {
+    let conflicts = 0;
+    const size = this.puzzle.length;
+    const values = size * size;
+    for (let i = 1; i < values - 1; i++) {
+      for (let j = 2; j < values; j++) {
+        const currI = this.findindexOf(this.puzzle, i);
+        const currJ = this.findindexOf(this.puzzle, j);
+        const targI = this.findindexOf(this.goal, i);
+        const targJ = this.findindexOf(this.goal, j);
+        if (currI.x === currJ.x && targI.x === targJ.x) {
+          if ((currI.y < currJ.y && targI.y > targJ.y) || (currI.y > currJ.y && targI.y < targJ.y)) {
+            conflicts++;
+          }
+        }
+        if (currI.y === currJ.y && targI.y === targJ.y) {
+          if ((currI.x < currJ.x && targI.x > targJ.x) || (currI.x > currJ.x && targI.x < targJ.x)) {
+            conflicts++;
+          }
+        }
+      }
+    }
+    return conflicts;
+  }
   /**
    * 
    * @param {boolean} u 

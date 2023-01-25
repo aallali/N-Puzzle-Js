@@ -9,6 +9,8 @@ export default class Solver {
         this.queue = new PQueue()
         // pre-append the first element to the queue
         this.queue.enqueue(firstElement)
+        // add first puzzle to visited set
+        this.visited.add(firstElement.hash)
         // the class property that will store the solution
         this.solution = null
 
@@ -33,29 +35,28 @@ export default class Solver {
 
         // loop while the queue is not empty and solution is not found yet
         while (!this.solution && !this.queue.isEmpty()) {
-
             // extract the first node in queue and pop it from the queue list
             const currentPuzzle = this.queue.dequeue();
             // wake up the childs : call a new Node() with the params stored in the childs property
             currentPuzzle.wakeUpChilds()
-            // add the current node hash to visited set
-            this.visited.add(currentPuzzle.hash)
             // increment count (number of loops/nodes)
             count++
-
             // check if the current node is the target/goal node
             if (currentPuzzle.isFinal) {
                 // store the current node in the this.solution and break
                 this.solution = currentPuzzle
                 break
             }
-
             // loop through all the childs in the current node (if any)
             // check if the child visited before and pre-append in the queue if not visited
             for (let i = 0; i < currentPuzzle.childs.length; i++) {
                 const child = currentPuzzle.childs[i];
-                if (!this.visited.test(child.hash))
+                if (!this.visited.test(child.hash)) {
+                    // add the current child node hash to visited set
+                    this.visited.add(child.hash)
+                    // add the child node to queue
                     this.queue.enqueue(child)
+                }
             }
         }
         // calc the diff time between start and now, store the output in time

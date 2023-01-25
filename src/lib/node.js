@@ -36,32 +36,6 @@ export default class Node {
   toHash(twoDarray) {
     return (twoDarray || this.puzzle).map((row) => row.join(".")).join(".");
   }
-
-  /**
-   * @output print puzzle to terminal
-   */
-  show() {
-    const score = this.score;
-    let line = "";
-    log("================");
-    const map = this.puzzle;
-    let size = map.length;
-
-    for (let i = 0; i < map.length; i++) {
-      for (let j = 0; j < map.length; j++) {
-        line +=
-          " " +
-          map[i][j] +
-          " ".repeat((size * size).toString().length - map[i][j].length) +
-          " ";
-        if (score != undefined && i == map.length - 1 && j == map.length - 1)
-          line += "\x1b[33m  score: " + score + "\x1b[0m";
-      }
-      log(line);
-      line = "";
-    }
-    log("================");
-  }
   /**
    * 
    * @param {string} heuristic 
@@ -69,9 +43,14 @@ export default class Node {
    */
   calculateScore(heuristics) {
     let score = 0;
+    let ready_scores = this.heuristics_in_one_loop()
     const heuristicsFunctions = {
-      "manhattan": this.heuristic_manhattan.bind(this),
-      "linearConflicts": () => this.heuristic_manhattan() + 2 * this.heuristic_linear_conflicts()
+      "manhattan": () => ready_scores.manhattan,
+      "linearConflicts": () => (ready_scores.manhattan + 2 * this.heuristic_linear_conflicts()),
+      "hamming": () => ready_scores.hamming,
+      "euclidean": () => ready_scores.euclidean,
+      "diagonal": () => ready_scores.diagonal,
+      "gaschnig": () => this.heuristic_gaschnig()
     }
     heuristics.forEach(heuristic => {
       score += heuristicsFunctions[heuristic]()
@@ -79,43 +58,121 @@ export default class Node {
 
     return score;
   }
-  heuristic_manhattan() {
-    let distance = 0;
+  /**
+   * since some heuristics use same loop through the puzzle, and to avoid unnecessary computation
+   * i added gathered those heuristics's score calculation in one loop at the same time
+   * and then you can choose what you want from the object returned
+   * containing each heuristic score
+   * @returns 
+   */
+  heuristics_in_one_loop() {
+    let manhattan = 0;
+    let hamming = 0;
+    let euclidean = 0;
+    let diagonal = 0;
     const size = this.puzzle.length;
+
     for (let i = 0; i < size; i++) {
       for (let j = 0; j < size; j++) {
-        const currentTile = this.puzzle[i][j];
-        const tileInGoal = this.findindexOf(this.goal, currentTile);
-        let d1 = Math.abs(i - tileInGoal.x);
-        let d2 = Math.abs(j - tileInGoal.y);
-        distance += + d1 + d2;
+
+        try {
+          // current tile in the loop
+          const currentTile = this.puzzle[i][j];
+          // find the index of same tile value but in the goal puzzle
+          const tileInGoal = this.findindexOf(this.goal, currentTile);
+          // find the tile that match the current i,j value in goal puzzle
+          const mirrorInGoal = this.goal[i][j];
+          // the distance between the X value of current tile and its equivalent in the goal puzzle
+          let d1 = Math.abs(i - tileInGoal.x);
+          // the distance between the Y value of current tile and its equivalent in the goal puzzle
+          let d2 = Math.abs(j - tileInGoal.y);
+
+          // calc hamming score
+          if (currentTile != mirrorInGoal)
+            hamming += currentTile != mirrorInGoal ? 1 : 0;
+
+          // calc manhattan score
+          manhattan += d1 + d2;
+
+          // calc euclidean score
+          euclidean += Math.sqrt(d1 ** 2 + d2 ** 2)
+
+          // calc diagonal
+          diagonal += Math.max(d1, d2)
+        } catch (err) {
+          throw (err)
+        }
       }
     }
-    return distance
+    euclidean = Number(euclidean.toFixed(4))
+
+
+    return { manhattan, hamming, euclidean, diagonal }
   }
+  /**
+   * the function that calculate the linear conflicts score of the puzzle
+   * @returns 
+   */
   heuristic_linear_conflicts() {
     let conflicts = 0;
     const size = this.puzzle.length;
     const values = size * size;
+
     for (let i = 1; i < values - 1; i++) {
       for (let j = 2; j < values; j++) {
         const currI = this.findindexOf(this.puzzle, i);
         const currJ = this.findindexOf(this.puzzle, j);
         const targI = this.findindexOf(this.goal, i);
         const targJ = this.findindexOf(this.goal, j);
-        if (currI.x === currJ.x && targI.x === targJ.x) {
-          if ((currI.y < currJ.y && targI.y > targJ.y) || (currI.y > currJ.y && targI.y < targJ.y)) {
+
+        if (currI.x === currJ.x && targI.x === targJ.x)
+          if ((currI.y < currJ.y && targI.y > targJ.y) || (currI.y > currJ.y && targI.y < targJ.y))
             conflicts++;
-          }
-        }
-        if (currI.y === currJ.y && targI.y === targJ.y) {
-          if ((currI.x < currJ.x && targI.x > targJ.x) || (currI.x > currJ.x && targI.x < targJ.x)) {
+
+        if (currI.y === currJ.y && targI.y === targJ.y)
+          if ((currI.x < currJ.x && targI.x > targJ.x) || (currI.x > currJ.x && targI.x < targJ.x))
             conflicts++;
-          }
-        }
       }
     }
     return conflicts;
+  }
+  /**
+   * the gaschnig heuristic implementation
+   * @returns 
+   */
+  heuristic_gaschnig() {
+    // Compute it like this:
+    // i. If the blank is where it should be in goal configuration, move any mismatched tile into the blank.
+    // ii. Now find the tile that should go in the blank’s location, and teleport it there.
+    // iii. Repeat (i. and ii.) until all are in their final positions.
+    let score = 0
+    const currentMap = JSON.parse(JSON.stringify(this.puzzle));
+    const goal = JSON.parse(JSON.stringify(this.goal));
+    const goalHash = this.toHash(goal);
+
+
+    while (this.toHash(currentMap) != goalHash) {
+      const cmz = this.findindexOf(currentMap, "0");
+      if (goal[cmz.x][cmz.y] == "0") { // the zero not in its goal place
+        for (let i = 0; i < this.puzzle.length; i++)
+          for (let j = 0; j < this.puzzle.length; j++)
+            if (currentMap[i][j] != goal[i][j]) {
+              const tmp = currentMap[i][j]
+              currentMap[i][j] = currentMap[cmz.x][cmz.y]
+              currentMap[cmz.x][cmz.y] = tmp
+              break
+            }
+      } else { // the zero in goal place
+        const sv = goal[cmz.x][cmz.y]
+        const ci = this.findindexOf(currentMap, sv)
+        const tmp = currentMap[cmz.x][cmz.y]
+        currentMap[cmz.x][cmz.y] = currentMap[ci.x][ci.y]
+        currentMap[ci.x][ci.y] = tmp
+      }
+      score++
+    }
+
+    return score
   }
   /**
    * 

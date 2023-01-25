@@ -5,7 +5,8 @@
  * @param {number|undefined} score
  * @output print formatted puzzle to console 
  */
-export default function printPuzzle(map, score) {
+export default function printPuzzle(puzzleMap, score) {
+    const map = JSON.parse(JSON.stringify(puzzleMap))
     const { log } = console;
     let line = ""
     log("================")

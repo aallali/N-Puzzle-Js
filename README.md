@@ -21,14 +21,14 @@
 - [x] comment all code in all files.
 - [x] fix the greedy/uniform implementation
 - [x] simplify the implemention of greedy condition in lib/node.js
-- [ ] add more heuristics (> 4)
+- [x] add more heuristics (> 4)
     - [x] `manhattan`
-    - [x] `linear conflicts` 
-    - [ ] `missplaced`
-    - [ ] `hamming`
-    - [ ] `gaschnig`
-    - [ ] `euclidean`
-    - [ ] `diagonal`
+    - [x] `linear conflicts` = (`manhattan * 1.5 + conflicts`)
+    - [x] `hamming (missplaced)`
+    - [x] `gaschnig` ([details](https://cse-robotics.engr.tamu.edu/dshell/cs625/gaschnig-note.pdf))
+    - [x] `euclidean`
+    - [x] `diagonal`
+    - read more about heuristics here ([click me](https://www.aaai.org/Papers/AAAI/1996/AAAI96-178.pdf))
 - [x] support using one or multiple heuristic
 - [ ] update the puzzle parser for more accuracy and error handling
 - [ ] add solvability checker

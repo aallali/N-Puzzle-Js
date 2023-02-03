@@ -15,6 +15,9 @@ export default class PriorityQueue {
      * then put it in the position in the list by its score
      */
     enqueue(elem) {
+        // equivalent to :
+        //      this.items.push(elem)
+        //      this.items.sort((a,b) => a.score -b.score)
         let contain = false;
         for (let i = 0; i < this.items.length; i++) {
             if (this.items[i].score > elem.score) {
@@ -23,10 +26,12 @@ export default class PriorityQueue {
                 break;
             }
         }
+
         if (!contain) {
-            this.items.push(elem);
+            this.items.push(elem)
         }
 
+        // get complexity in size
         if (this.items.length > this.maxOpen)
             this.maxOpen = this.items.length
     }
@@ -43,6 +48,6 @@ export default class PriorityQueue {
      * @returns check if the items list is empty
      */
     isEmpty() {
-        return this.items.length === 0;
+        return this.items.length == 0;
     }
 } 

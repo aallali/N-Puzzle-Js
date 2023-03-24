@@ -9,9 +9,9 @@ async function main() {
 	const inputFileTxt = await readFile("./src/input");
 	// parse the puzzle from the puzzle into 2d array
 	const puzzle = parsePuzzle(inputFileTxt);
-
+	const goalPuzzle = "snail"
 	// generated the target puzzle need to be reach (˜the goal puzzle)
-	const goal = generateGoal.snail(puzzle.length);
+	const goal = generateGoal[goalPuzzle](puzzle.length);
 
 	// set the params which will be used in the solving algorithm
 	// Heuristics Supportedd:
@@ -19,9 +19,9 @@ async function main() {
 	// 		"euclidean", "diagonal", "gaschnig"
 	const params = {
 		puzzle: puzzle,
-		greedy: false, // true == ignore the treeLevel score
+		greedy: true, // true == ignore the treeLevel score
 		uniform: false, // true == ignore the heuristic score
-		heuristic: ["linearConflicts"], // the list of heuristics to use
+		heuristic: ["manhattan", "linearConflicts"], // the list of heuristics to use
 		queueType: "heapQ"  // "heapQ" or "prirityQ"
 	}
 
@@ -32,6 +32,10 @@ async function main() {
 
 	// init a solver instant and start the process
 	const solver = new Solver(initPuzzle, params.queueType);
+	if (!solver.isSolvable) {
+		log(`[ This puzzle is not solvable to '${goalPuzzle}' state, try change the puzzle or change the final state ]`)
+		return
+	}
 	let solution = await solver.start();
 
 	if (solution) {

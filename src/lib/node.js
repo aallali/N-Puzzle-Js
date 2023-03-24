@@ -1,4 +1,5 @@
-const { log } = console;
+"use strict";
+// const { log } = console;
 
 export default class Node {
   constructor(puzzle, greedy, uniform, goal, parent, heuristics) {
@@ -48,7 +49,7 @@ export default class Node {
     const heuristicsFunctions = {
       manhattan: () => ready_scores.manhattan,
       linearConflicts: () =>
-        ready_scores.manhattan + 2 * this.heuristic_linear_conflicts(),
+      ready_scores.manhattan + 2 * this.heuristic_linear_conflicts(),
       hamming: () => ready_scores.hamming,
       euclidean: () => ready_scores.euclidean,
       diagonal: () => ready_scores.diagonal,
@@ -103,13 +104,17 @@ export default class Node {
 
             // calc diagonal
             diagonal += Math.max(d1, d2);
+           
           } catch (err) {
             throw err;
           }
       }
     }
-    euclidean = Number(euclidean.toFixed(4));
-
+    const tff = (f) => parseFloat(f.toFixed(4));
+  
+    euclidean = tff(euclidean);
+    manhattan = tff(manhattan);
+  
     return { manhattan, hamming, euclidean, diagonal };
   }
   /**

@@ -46,40 +46,35 @@
 
 
 ### Example of input/output:
-- input
+- input of puzzle size 3x3, with no score (f) or path cost (g) counting, open all paths until solution using heapQ algorithm
 
 [ input file ] ----------------------------------------------
 ```
 # This puzzle is solvable
 3
-1 3 5
-4 8 7
-0 2 6
+2 4 0
+1 3 6
+7 5 8
 ```
 [ Solver params ] -------------------------------------------
 ```js
 const params = {
-    puzzle,
-    greedy: false, // true == ignore the treeLevel score
-    uniform: false, // true == ignore the heuristic score
-    heuristic: ["manhattan", "linearConflicts"] // the heuristic to use
+    puzzle: puzzle,
+    greedy: true,
+    uniform: true,
+    heuristic: ["linearConflicts"],
+    queueType: "heapQ"
 }
 ```
 
 - output (npm run dev)
-```
+```shell
 ➜  n-puzzle-js git:(main) ✗ npm run start 
-================
- 1  2  3 
- 8  █  4 
- 7  6  5   score: 20
-================
-Step n: 21/21
 ---------------------------------------------
-        Steps to solution  : 21
-        complexity in time : 57
-        complexity in size : 55
-        Time spent :  0 s, 25.553 ms
+        Steps to solution  : 13
+        complexity in time : 1281
+        complexity in size : 817
+        Time spent :  0 s, 142.021 ms
 ---------------------------------------------
 ➜  n-puzzle-js git:(main) ✗
 

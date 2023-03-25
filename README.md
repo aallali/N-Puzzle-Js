@@ -31,9 +31,10 @@
     - read more about heuristics here ([click me](https://www.aaai.org/Papers/AAAI/1996/AAAI96-178.pdf))
 - [x] support using one or multiple heuristic
 - [ ] update the puzzle parser for more accuracy and error handling
-- [ ] add solvability checker
+- [x] add solvability checker
+- [x] add puzzle generator (params: size, goal, solved or not, iterations)
 - [ ] config the solver to add type of target puzzle option (`zero last`, `zero first`, `snail`)
-- [ ] create seprate method functions for the heuristics
+- [x] create seprate method functions for the heuristics
 - [ ] pack all the Puzzle solver into one package
 - [ ] create an UI for n-puzzle using the package created in previous task
 

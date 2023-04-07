@@ -1,12 +1,13 @@
 {
-  "name": "puzzly",
-  "version": "1.0.0",
+  "name": "npuzzle-engine",
+  "version": "1.0.1",
   "description": "n-puzzle its an app that use the A* algorithm with many heuristics to solve the slide puzzle",
   "main": "src/index.js",
   "scripts": {
     "build": "npx babel ./src --out-dir ./dist --source-maps --copy-files --compact auto --no-comments --verbose --delete-dir-on-start",
-    "start": "npm run build && node dist/index.js",
-    "dev": "npx nodemon  --watch src --exec babel-node src/index.js"
+    "start": "npm run build && node dist/test.js",
+    "dev": "npx nodemon  --watch src --exec babel-node src/test.js",
+    "bundle": "npm run build && npx browserify dist/index.js --s npuzzle > bundle/npuzzle-bundle.js && cp bundle/npuzzle-bundle.js ../n-puzzle-ui/public && cp src/utils/goalGenerator.js src/utils/puzzleGenerator.js src/utils/solvability.js ../n-puzzle-ui/src/puzzle/utils"
   },
   "author": "Abdellah Allali",
   "license": "ISC",

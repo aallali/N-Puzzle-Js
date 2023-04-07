@@ -28,7 +28,7 @@ self.onmessage =  (e) => {
       solver.start().then((solution) => self.postMessage(solution))
       
     } else {
-      self.postMessage(null);
+      self.postMessage(undefined);
     }
   }
 

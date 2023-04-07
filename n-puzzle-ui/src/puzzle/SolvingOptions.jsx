@@ -5,27 +5,37 @@ export default function SolvingOptions({
   addOrRemove,
   setQType,
   runSolver,
+  stopSolver,
+  worker,
 }) {
   return (
     <>
       {expanded ? (
-        <div className="expanded">
-          {!solvingOptions.uniform ? (
-            <Heuristics
-              solvingOptions={solvingOptions}
-              updateSolvingOptions={updateSolvingOptions}
-              addOrRemove={addOrRemove}
-            />
-          ) : null}
-          <AlgoOptions
-            solvingOptions={solvingOptions}
-            updateSolvingOptions={updateSolvingOptions}
-            setQType={setQType}
-          />
-          <button className="confButton" onClick={runSolver}>
-            Solve
-          </button>
-        </div>
+        <>
+          {(worker && (
+            <button className="confButton" onClick={stopSolver}>
+              Stop
+            </button>
+          )) || (
+            <div className="expanded">
+              {!solvingOptions.uniform ? (
+                <Heuristics
+                  solvingOptions={solvingOptions}
+                  updateSolvingOptions={updateSolvingOptions}
+                  addOrRemove={addOrRemove}
+                />
+              ) : null}
+              <AlgoOptions
+                solvingOptions={solvingOptions}
+                updateSolvingOptions={updateSolvingOptions}
+                setQType={setQType}
+              />
+              <button className="confButton" onClick={runSolver}>
+                Solve
+              </button>
+            </div>
+          )}
+        </>
       ) : null}
     </>
   );

@@ -6,7 +6,7 @@ function App() {
 
   return (
     <div className="App-container">
-      <PuzzleBoard worker={null} />
+      <PuzzleBoard/>
     </div>
   );
 }

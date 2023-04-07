@@ -10,9 +10,8 @@ import Generator from "./Generator";
 
 // const { log } = console;
 
-//Send data to the worker at worker.js
-
-export default function PuzzleBoard({ worker }) {
+export default function PuzzleBoard({}) {
+  const [worker, initWorker] = useState(undefined);
   const [puzzle, setPuzzle] = useState([]);
   const [goal, setGoal] = useState("snail");
   const [size, setSize] = useState(3);
@@ -22,7 +21,7 @@ export default function PuzzleBoard({ worker }) {
   const [solution, setSolution] = useState();
   const [solvingOptions, updateSolvingOptions] = useState({
     heuristics: ["linearConflicts"],
-    greedy: true,
+    greedy: false,
     uniform: false,
   });
   useEffect(() => {
@@ -54,6 +53,7 @@ export default function PuzzleBoard({ worker }) {
       }));
       playSolution();
     }
+    return 
   }, [solution]);
 
   useEffect(() => {
@@ -73,29 +73,35 @@ export default function PuzzleBoard({ worker }) {
 
   async function runSolver() {
     setSolution(null);
-    let block = 1;
-    worker = new Worker("worker.js");
-    worker.onmessage = (e) => {
-      setSolution(e.data);
-      console.log(e.data.steps[0]);
-
-      worker.terminate();
-    };
-
-    worker.postMessage({
-      initPuzzleNode: [
-        puzzle.map((l) => l.map((c) => c.toString())),
-        solvingOptions.greedy,
-        solvingOptions.uniform,
-        generateGoal[goal](size),
-        undefined,
-        solvingOptions.heuristics,
-      ],
-      qType,
-      block,
-    });
+    initWorker(new Worker("worker.js"));
   }
+  function stopWorker() {
+    worker.terminate();
+    initWorker(undefined);
+  }
+  useEffect(() => {
+    if (worker) {
+      worker.onmessage = (e) => {
+        setSolution(e.data);
+        console.log(e.data.steps[0]);
 
+        worker.terminate();
+        initWorker(undefined);
+      };
+
+      worker.postMessage({
+        initPuzzleNode: [
+          puzzle.map((l) => l.map((c) => c.toString())),
+          solvingOptions.greedy,
+          solvingOptions.uniform,
+          generateGoal[goal](size),
+          undefined,
+          solvingOptions.heuristics,
+        ],
+        qType,
+      });
+    }
+  }, [worker]);
   const defaultPuzzlTxt = `
 # first line should contain the size of the puzzle
 # write every row in a line
@@ -176,6 +182,8 @@ export default function PuzzleBoard({ worker }) {
                 addOrRemove={addOrRemove}
                 setQType={setQType}
                 runSolver={runSolver}
+                stopSolver={stopWorker}
+                worker={worker}
               />
             </fieldset>
           </div>
@@ -186,6 +194,7 @@ export default function PuzzleBoard({ worker }) {
               <SolutionTable
                 solution={solution}
                 solvingOptions={solvingOptions}
+                
               />
             </div>
           </div>

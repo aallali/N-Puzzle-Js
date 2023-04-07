@@ -9,7 +9,17 @@ import SolvingOptions from "./SolvingOptions";
 import Generator from "./Generator";
 
 // const { log } = console;
-
+const defaultPuzzlTxt = `
+# first line should contain the size of the puzzle
+# write every row in a line
+# separate numbers by space
+# lines prevfixed with '#' are ignored
+# example :
+3
+2 4 0
+1 3 6
+7 5 8
+`;
 export default function PuzzleBoard({}) {
   const [worker, initWorker] = useState(undefined);
   const [puzzle, setPuzzle] = useState([]);
@@ -17,13 +27,18 @@ export default function PuzzleBoard({}) {
   const [size, setSize] = useState(3);
   const [qType, setQType] = useState("priorityQ");
   const [solvability, setSolvability] = useState(true);
-  const [complete, setComplete] = useState(false);
   const [solution, setSolution] = useState();
   const [solvingOptions, updateSolvingOptions] = useState({
     heuristics: ["linearConflicts"],
     greedy: false,
     uniform: false,
   });
+  const [expanded, setExpanded] = useState({
+    import: false,
+    generate: false,
+    solver: true,
+  });
+
   useEffect(() => {
     if (
       puzzle.length &&
@@ -31,11 +46,7 @@ export default function PuzzleBoard({}) {
     )
       setPuzzle(puzzle.map((l) => l.map((c) => parseInt(c))));
   }, [puzzle]);
-  const [expanded, setExpanded] = useState({
-    import: false,
-    generate: false,
-    solver: true,
-  });
+
   useEffect(() => {
     async function playSolution() {
       for (let i = 0; i < solution.steps.length; i++) {
@@ -53,7 +64,7 @@ export default function PuzzleBoard({}) {
       }));
       playSolution();
     }
-    return 
+    return;
   }, [solution]);
 
   useEffect(() => {
@@ -64,21 +75,6 @@ export default function PuzzleBoard({}) {
     );
   }, [size, goal]);
 
-  function onMovePiece(i, j) {
-    const newPuzzle = movePiece(i, j, complete, puzzle);
-    if (newPuzzle) {
-      setPuzzle(newPuzzle);
-    }
-  }
-
-  async function runSolver() {
-    setSolution(null);
-    initWorker(new Worker("worker.js"));
-  }
-  function stopWorker() {
-    worker.terminate();
-    initWorker(undefined);
-  }
   useEffect(() => {
     if (worker) {
       worker.onmessage = (e) => {
@@ -101,18 +97,25 @@ export default function PuzzleBoard({}) {
         qType,
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [worker]);
-  const defaultPuzzlTxt = `
-# first line should contain the size of the puzzle
-# write every row in a line
-# separate numbers by space
-# lines prevfixed with '#' are ignored
-# example :
-3
-2 4 0
-1 3 6
-7 5 8
-`;
+
+  function onMovePiece(i, j) {
+    const newPuzzle = movePiece(i, j, false, puzzle);
+    if (newPuzzle) {
+      setPuzzle(newPuzzle);
+    }
+  }
+  async function runSolver() {
+    setSolution(null);
+    initWorker(new Worker("worker.js"));
+  }
+
+  function stopWorker() {
+    worker.terminate();
+    initWorker(undefined);
+  }
+
   return (
     <div style={{ display: "flex" }}>
       <div className="container config">
@@ -194,7 +197,6 @@ export default function PuzzleBoard({}) {
               <SolutionTable
                 solution={solution}
                 solvingOptions={solvingOptions}
-                
               />
             </div>
           </div>

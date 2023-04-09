@@ -112,18 +112,20 @@ export default function PuzzleBoard({}) {
   }, [worker]);
 
   function onMovePiece(i, j) {
-    log( play.playIt ? play.states[play.idx][0] : puzzle)
-     const newPuzzle = movePiece(
+    const newPuzzle = movePiece(
       i,
       j,
       false,
-      play.playIt ? play.states[play.idx][0].map(r => r.map(c => parseInt(c))) : puzzle
+      play.playIt
+        ? play.states[play.idx][0].map((r) => r.map((c) => parseInt(c)))
+        : puzzle
     );
     if (newPuzzle) {
       setPuzzle(newPuzzle);
     }
   }
   async function runSolver() {
+    if (worker) worker.terminate();
     setSolution(null);
     initWorker(new Worker("worker.js"));
   }
@@ -242,39 +244,44 @@ export default function PuzzleBoard({}) {
               onMovePiece={onMovePiece}
               complete={false}
             />
+            <div></div>
+
             {solution && play.playIt && (
-              <div style={{ display: "flex" }}>
-                <button
-                  className="confButton"
-                  style={{ margin: "auto" }}
-                  onClick={() =>
-                    isPlay((prev) => ({
-                      ...prev,
-                      idx: prev.idx > 0 ? prev.idx - 1 : 0,
-                    }))
-                  }
-                >
-                  Prev
-                </button>
-                <p>
-                  {play.idx + 1}/{play.states.length}
-                </p>
-                <button
-                className="confButton"
-                  style={{ margin: "auto" }}
-                  onClick={() =>
-                    isPlay((prev) => ({
-                      ...prev,
-                      idx:
-                        prev.idx < play.states.length - 1
-                          ? prev.idx + 1
-                          : prev.idx,
-                    }))
-                  }
-                >
-                  Next
-                </button>
-              </div>
+              <>
+                <p>Score g() + h(): {play.states[play.idx][1]}</p>
+                <div style={{ display: "flex" }}>
+                  <button
+                    className="confButton"
+                    style={{ margin: "auto" }}
+                    onClick={() =>
+                      isPlay((prev) => ({
+                        ...prev,
+                        idx: prev.idx > 0 ? prev.idx - 1 : 0,
+                      }))
+                    }
+                  >
+                    Prev
+                  </button>
+                  <p style={{ padding: 5 }}>
+                    {play.idx + 1}/{play.states.length}
+                  </p>
+                  <button
+                    className="confButton"
+                    style={{ margin: "auto" }}
+                    onClick={() =>
+                      isPlay((prev) => ({
+                        ...prev,
+                        idx:
+                          prev.idx < play.states.length - 1
+                            ? prev.idx + 1
+                            : prev.idx,
+                      }))
+                    }
+                  >
+                    Next
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </fieldset>

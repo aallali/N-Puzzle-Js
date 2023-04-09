@@ -19,8 +19,8 @@ export function SinglePuzzle({ puzzle, complete, onMovePiece }) {
           }}
         >
           {row.map((col, j) => {
-          
-            const color = col === 0 || col == "0" ? "transparent" : "rgb(211 211 211)";
+            const color =
+              col === 0 || col == "0" ? "transparent" : "rgb(211 211 211)";
             return (
               <div
                 key={`${i}-${j}`}
@@ -45,7 +45,7 @@ export function SinglePuzzle({ puzzle, complete, onMovePiece }) {
                     // color: "white",
                   }}
                 >
-                  {col !== 0 && col}
+                  {col !== 0 && col !== "0" && col}
                 </span>
               </div>
             );

@@ -40,7 +40,7 @@ export default function PuzzleBoard({}) {
   });
   const [expanded, setExpanded] = useState({
     import: false,
-    generate: false,
+    generate: true,
     solver: true,
   });
 

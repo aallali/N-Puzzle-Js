@@ -31,10 +31,10 @@ export default function SolutionTable({
                   "ms"}
               </td>
             </tr>
-            <tr>
+            {/* <tr>
               <td>Steps</td>
               <td></td>
-            </tr>
+            </tr> */}
             <tr>
               <td>Algorithm</td>
               <td> A* (a star)</td>
@@ -42,7 +42,6 @@ export default function SolutionTable({
             <tr>
               <td>heuristics</td>
               <td>
-                {" "}
                 {(
                   (!solvingOptions.uniform && solvingOptions.heuristics) ||
                   []
@@ -55,11 +54,11 @@ export default function SolutionTable({
               </td>
             </tr>
             <tr>
-              <td>Tree level ignored</td>
+              <td>Tree level ignored <br />g() = 0</td>
               <td> {(solvingOptions.greedy && "Yes") || "No"}</td>
             </tr>
             <tr>
-              <td>Score ignored</td>
+              <td>Score ignored <br />h() = 0</td>
               <td> {(solvingOptions.uniform && "Yes") || "No"}</td>
             </tr>
           </tbody>

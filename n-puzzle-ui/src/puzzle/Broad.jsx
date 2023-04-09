@@ -8,7 +8,7 @@ import { addOrRemove, PuzzleGenerator, generateGoal } from "./utils";
 import SolvingOptions from "./SolvingOptions";
 import Generator from "./Generator";
 
-// const { log } = console;
+const { log } = console;
 const defaultPuzzlTxt = `
 # first line should contain the size of the puzzle
 # write every row in a line
@@ -27,6 +27,11 @@ export default function PuzzleBoard({}) {
   const [size, setSize] = useState(3);
   const [qType, setQType] = useState("priorityQ");
   const [solvability, setSolvability] = useState(true);
+  const [play, isPlay] = useState({
+    states: [],
+    playIt: false,
+    idx: 0,
+  });
   const [solution, setSolution] = useState();
   const [solvingOptions, updateSolvingOptions] = useState({
     heuristics: ["linearConflicts"],
@@ -40,6 +45,8 @@ export default function PuzzleBoard({}) {
   });
 
   useEffect(() => {
+    isPlay((prev) => ({ ...prev, playIt: false }));
+    setSolution(undefined);
     if (
       puzzle.length &&
       (typeof puzzle[0][0] === "string" || puzzle[0][0] instanceof String)
@@ -62,14 +69,14 @@ export default function PuzzleBoard({}) {
         generate: !solution,
         solver: !solution,
       }));
-      playSolution();
+      // playSolution();
     }
     return;
   }, [solution]);
 
   useEffect(() => {
     setPuzzle(
-      new PuzzleGenerator(size, goal, true, 1).map((l) =>
+      new PuzzleGenerator(size, goal, true, 1000).map((l) =>
         l.map((c) => parseInt(c))
       )
     );
@@ -79,7 +86,11 @@ export default function PuzzleBoard({}) {
     if (worker) {
       worker.onmessage = (e) => {
         setSolution(e.data);
-        console.log(e.data.steps[0]);
+        isPlay({
+          states: e.data.steps,
+          playIt: true,
+          idx: 0,
+        });
 
         worker.terminate();
         initWorker(undefined);
@@ -101,7 +112,13 @@ export default function PuzzleBoard({}) {
   }, [worker]);
 
   function onMovePiece(i, j) {
-    const newPuzzle = movePiece(i, j, false, puzzle);
+    log( play.playIt ? play.states[play.idx][0] : puzzle)
+     const newPuzzle = movePiece(
+      i,
+      j,
+      false,
+      play.playIt ? play.states[play.idx][0].map(r => r.map(c => parseInt(c))) : puzzle
+    );
     if (newPuzzle) {
       setPuzzle(newPuzzle);
     }
@@ -219,11 +236,46 @@ export default function PuzzleBoard({}) {
                 <br /> area to move it:
               </p>
             </div>
+
             <SinglePuzzle
-              puzzle={puzzle}
+              puzzle={(play.playIt && play?.states?.[play.idx][0]) || puzzle}
               onMovePiece={onMovePiece}
               complete={false}
             />
+            {solution && play.playIt && (
+              <div style={{ display: "flex" }}>
+                <button
+                  className="confButton"
+                  style={{ margin: "auto" }}
+                  onClick={() =>
+                    isPlay((prev) => ({
+                      ...prev,
+                      idx: prev.idx > 0 ? prev.idx - 1 : 0,
+                    }))
+                  }
+                >
+                  Prev
+                </button>
+                <p>
+                  {play.idx + 1}/{play.states.length}
+                </p>
+                <button
+                className="confButton"
+                  style={{ margin: "auto" }}
+                  onClick={() =>
+                    isPlay((prev) => ({
+                      ...prev,
+                      idx:
+                        prev.idx < play.states.length - 1
+                          ? prev.idx + 1
+                          : prev.idx,
+                    }))
+                  }
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
         </fieldset>
         <fieldset>

@@ -11,8 +11,8 @@ async function main() {
     // read input file containing the puzzle
     const inputFileTxt = await readFile("./src/input");
     // parse the puzzle from the puzzle into 2d array
-    const puzzle = parsePuzzle(inputFileTxt);
-    // const puzzle = {valid: true, puzzle: new PuzzleGenerator(3, "zFirst", true, 100)}
+    // const puzzle = parsePuzzle(inputFileTxt);
+    const puzzle = {valid: true, puzzle: new PuzzleGenerator(3, "snail", true, 100)}
     if (!puzzle.valid) {
         log("[ERROR] : invalid puzzle format file => ", puzzle.error)
         process.exit(0)
@@ -25,11 +25,11 @@ async function main() {
     // 		"manhattan", "linearConflicts",  "hamming", 
     // 		"euclidean", "diagonal", "gaschnig"
     const params = {
-        goal: "zLast",
+        goal: "snail",
         puzzle: puzzle.puzzle,
         greedy: false, // true == ignore the treeLevel score
         uniform: false, // true == ignore the heuristic score
-        heuristic: ["manhattan", "linearConflicts"], // the list of heuristics to use
+        heuristic: ["manhattan"], // the list of heuristics to use
         queueType: "heapQ"  // "heapQ" or "priorityQ"
     }
     // generated the tar/get puzzle need to be reach (˜the goal puzzle)
@@ -42,10 +42,10 @@ async function main() {
     // init a solver instant and start the process
     const solver = new Solver(initPuzzle, params.queueType);
     if (!solver.isSolvable) {
-        log(`[ This puzzle is not solvable to '${goalPuzzle}' state, try change the puzzle or change the final state ]`)
+        log(`[ This puzzle is not solvable to '${params.goal}' state, try change the puzzle or change the final state ]`)
         return
     }
-    let solution = await solver.start_DFS(100000, initPuzzle);
+    let solution = await solver.start_BFS(Infinity, initPuzzle);
     // log(solution)
     if (solution && solution != -1) {
         const steps = solution.steps
@@ -61,7 +61,7 @@ async function main() {
 
         // print required detailes about the solution asked in the subject pdf
         log('---------------------------------------------')
-        log(`	Steps to solution  :`, steps.length - 1, `[${steps.length < 10 && steps.map(s => s[3]).filter(l => l)}]`)
+        log(`	Steps to solution  :`, steps.length - 1, `[${steps.length < 30 && steps.map(s => s[3]).filter(l => l)}]`)
         log("	complexity in time :", solution.cTime)
         log("	complexity in size :", solution.cSize)
         log("	Time spent : ", t.s, "s,", t.m, "ms")

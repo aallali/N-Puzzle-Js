@@ -1,35 +1,43 @@
 "use strict";
-// const { log } = console;
+import { findIndexOf } from "../utils";
 
+// const { log } = console;
 export default class Node {
   constructor(puzzle, greedy, uniform, goal, parent, heuristics) {
     this.puzzle = puzzle;
-
+    this.greedy = greedy
+    this.uniform = uniform
     this.treeLevel = 0;
-    if (!greedy) {
-      if (parent === undefined)
+    this.goal = goal;
+    this.hash = this.toHash(this.puzzle);
+    this.isFinal = this.checkIfFinal();
+    this.parent = parent
+    this.heuristics = heuristics
+    this.initNode()
+  }
+  initNode() {
+    if (!this.greedy) {
+      if (this.parent === undefined)
         // if parent undefined means its first element, so treeLevel should be 0
         this.treeLevel = 0;
       // means it's child node, so the treeLevel should equal to (= parent.Level + 1)
-      else this.treeLevel = parent.treeLevel + 1;
+      else this.treeLevel = this.parent.treeLevel + 1;
     }
-    this.hash = this.toHash(this.puzzle);
-    this.parent = parent && {
-      parent: parent.parent,
-      puzzle: parent.puzzle,
-      score: parent.score,
+    this.parent = this.parent && {
+      parent: this.parent.parent,
+      puzzle: this.parent.puzzle,
+      g: this.parent.treeLevel,
+      h: this.parent.h,
     };
 
-    this.goal = goal;
-    this.isFinal = this.checkIfFinal();
+    
     this.childs = [];
-    this.score =
-      this.treeLevel + (uniform ? 0 : this.calculateScore(heuristics)); // if uniform is true, heuristic score should be 0 (ignored)
+    this.h = this.uniform ? 0 : this.calculateScore(this.heuristics);
+    this.score = this.treeLevel + this.h; // if uniform is true, heuristic score should be 0 (ignored)
 
     // generate the params of childs if any, and keep them sleeping (param only without Node object)
-    this.genChilds(uniform, greedy, heuristics);
+    this.genChilds(this.uniform, this.greedy, this.heuristics);
   }
-
   /**
    *
    * @param {[][]} twoDarray
@@ -49,7 +57,7 @@ export default class Node {
     const heuristicsFunctions = {
       manhattan: () => ready_scores.manhattan,
       linearConflicts: () =>
-      ready_scores.manhattan + 2 * this.heuristic_linear_conflicts(),
+        ready_scores.manhattan + 2 * this.heuristic_linear_conflicts(),
       hamming: () => ready_scores.hamming,
       euclidean: () => ready_scores.euclidean,
       diagonal: () => ready_scores.diagonal,
@@ -80,10 +88,10 @@ export default class Node {
         // current tile in the loop
         const currentTile = this.puzzle[i][j];
         // find the index of same tile value but in the goal puzzle
-        const tileInGoal = this.findindexOf(this.goal, currentTile);
+        const tileInGoal = findIndexOf(this.goal, currentTile);
         // find the tile that match the current i,j value in goal puzzle
         const mirrorInGoal = this.goal[i][j];
-        
+
         // dont apply the equation on the empty TILE
         if (currentTile != "0")
           try {
@@ -104,17 +112,16 @@ export default class Node {
 
             // calc diagonal
             diagonal += Math.max(d1, d2);
-           
           } catch (err) {
             throw err;
           }
       }
     }
     const tff = (f) => parseFloat(f.toFixed(4));
-  
+
     euclidean = tff(euclidean);
     manhattan = tff(manhattan);
-  
+
     return { manhattan, hamming, euclidean, diagonal };
   }
   /**
@@ -128,10 +135,10 @@ export default class Node {
 
     for (let i = 1; i < values - 1; i++) {
       for (let j = 2; j < values; j++) {
-        const currI = this.findindexOf(this.puzzle, i);
-        const currJ = this.findindexOf(this.puzzle, j);
-        const targI = this.findindexOf(this.goal, i);
-        const targJ = this.findindexOf(this.goal, j);
+        const currI = findIndexOf(this.puzzle, i);
+        const currJ = findIndexOf(this.puzzle, j);
+        const targI = findIndexOf(this.goal, i);
+        const targJ = findIndexOf(this.goal, j);
 
         if (currI.x === currJ.x && targI.x === targJ.x)
           if (
@@ -165,7 +172,7 @@ export default class Node {
     const goalHash = this.toHash(goal);
 
     while (this.toHash(currentMap) != goalHash) {
-      const cmz = this.findindexOf(currentMap, "0");
+      const cmz = findIndexOf(currentMap, "0");
       if (goal[cmz.x][cmz.y] == "0") {
         // the zero not in its goal place
         for (let i = 0; i < this.puzzle.length; i++)
@@ -179,7 +186,7 @@ export default class Node {
       } else {
         // the zero in goal place
         const sv = goal[cmz.x][cmz.y];
-        const ci = this.findindexOf(currentMap, sv);
+        const ci = findIndexOf(currentMap, sv);
         const tmp = currentMap[cmz.x][cmz.y];
         currentMap[cmz.x][cmz.y] = currentMap[ci.x][ci.y];
         currentMap[ci.x][ci.y] = tmp;
@@ -204,7 +211,7 @@ export default class Node {
       down: { x: 1, y: 0 },
     };
     // find the index of 0 in the current puzzle
-    const zeroIdx = this.findindexOf(this.puzzle, "0");
+    const zeroIdx = findIndexOf(this.puzzle, "0");
     // loop through the moves directions
     for (const dir in moves) {
       // generate new puzzle with possible move of '0'
@@ -218,21 +225,6 @@ export default class Node {
 
       if (newPuzzle) {
         this.childs.push([newPuzzle, g, u, heuristic]);
-      }
-    }
-  }
-  /**
-   *
-   * @param {[][]}} arr2D
-   * @param {string} trgt
-   * @returns {x: number, y: number} coordination of the trgt in arr2D if found
-   * @returns {undefined} if not found
-   */
-  findindexOf(arr2D, trgt) {
-    const size = arr2D.length;
-    for (let i = 0; i < size; i++) {
-      for (let j = 0; j < size; j++) {
-        if (arr2D[i][j] == trgt) return { x: i, y: j };
       }
     }
   }

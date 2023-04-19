@@ -1,6 +1,7 @@
 ### N-Puzzle (version: javascript)
 
 ###### check Python version [here](https://github.com/aallali/N-Puzzle)
+###### try live demo [here](https://n-puzzle-js.vercel.app/)
 
     The goal of this project is to solve the N-puzzle ("taquin" in French) game using the A*
     search algorithm or one of its variants.
@@ -39,8 +40,16 @@
 - [x] config the solver to add type of target puzzle option (`zero last`, `zero first`, `snail`)
 - [x] create seprate method functions for the heuristics
 - [x] pack all the Puzzle solver into one package
+- [x] add support of BFS + DFS search algorithms alongside with A*
 - [ ] write unit tests for the engine
-- [ ] add folder to contain different puzzle inputs file for testing
+  - [x] ASTAR
+  - [ ] BFS
+  - [ ] DFS
+  - [ ] file parser
+  - [ ] puzzle generator
+  - [ ] solvability checker
+  - [ ] heuristics score
+- [x] add folder to contain different puzzle inputs file for testing
 - [ ] create an UI for n-puzzle using the package created in previous task (70%)
 
 ### Run the code :

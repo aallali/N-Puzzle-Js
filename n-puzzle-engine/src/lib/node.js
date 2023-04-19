@@ -13,6 +13,7 @@ export default class Node {
     this.isFinal = this.checkIfFinal();
     this.parent = parent
     this.heuristics = heuristics
+    this.score = 0
     this.initNode()
   }
   initNode() {
@@ -57,7 +58,7 @@ export default class Node {
     const heuristicsFunctions = {
       manhattan: () => ready_scores.manhattan,
       linearConflicts: () =>
-        ready_scores.manhattan + 2 * this.heuristic_linear_conflicts(),
+        ready_scores.manhattan * 1.5 +  this.heuristic_linear_conflicts(),
       hamming: () => ready_scores.hamming,
       euclidean: () => ready_scores.euclidean,
       diagonal: () => ready_scores.diagonal,

@@ -1,7 +1,7 @@
-import { PuzzleGenerator, parsePuzzle, generateGoal, printPuzzle, blok } from "./utils";
-import Node from "./lib/node";
-import Solver from "./lib/solver";
-import readFile from "./utils/loadinput"
+import { PuzzleGenerator, parsePuzzle, generateGoal, printPuzzle } from "../utils";
+import Node from "../lib/node";
+import Solver from "../lib/solver";
+import readFile from "../utils/loadinput"
 
 const { log } = console;
 
@@ -11,8 +11,8 @@ async function main() {
     // read input file containing the puzzle
     const inputFileTxt = await readFile("./src/input");
     // parse the puzzle from the puzzle into 2d array
-    // const puzzle = parsePuzzle(inputFileTxt);
-    const puzzle = {valid: true, puzzle: new PuzzleGenerator(3, "snail", true, 100)}
+    const puzzle = parsePuzzle(inputFileTxt);
+    // const puzzle = {valid: true, puzzle: new PuzzleGenerator(3, "snail", true, 100)}
     if (!puzzle.valid) {
         log("[ERROR] : invalid puzzle format file => ", puzzle.error)
         process.exit(0)
@@ -25,7 +25,7 @@ async function main() {
     // 		"manhattan", "linearConflicts",  "hamming", 
     // 		"euclidean", "diagonal", "gaschnig"
     const params = {
-        goal: "snail",
+        goal: "zFirst",
         puzzle: puzzle.puzzle,
         greedy: false, // true == ignore the treeLevel score
         uniform: false, // true == ignore the heuristic score
@@ -40,12 +40,12 @@ async function main() {
     printPuzzle(initPuzzle.puzzle, initPuzzle.score)
 
     // init a solver instant and start the process
-    const solver = new Solver(initPuzzle, params.queueType);
-    if (!solver.isSolvable) {
+    const solver = new Solver(params.queueType);
+    if (!solver.checkSolvability(initPuzzle.puzzle, goal)) {
         log(`[ This puzzle is not solvable to '${params.goal}' state, try change the puzzle or change the final state ]`)
         return
     }
-    let solution = await solver.start_BFS(Infinity, initPuzzle);
+    let solution = await solver.start_DFS(+Infinity, initPuzzle);
     // log(solution)
     if (solution && solution != -1) {
         const steps = solution.steps
@@ -66,11 +66,12 @@ async function main() {
         log("	complexity in size :", solution.cSize)
         log("	Time spent : ", t.s, "s,", t.m, "ms")
         log('---------------------------------------------')
-    } else { 
+    } else {
         if (solution == -1) {
             log("Number of Iterations Exceeded")
         } else
-        log("[ Sorry i cant solve this, take that s**t away from me, thanks! ]") }
+            log("[ Sorry i cant solve this, take that s**t away from me, thanks! ]")
+    }
 
 }
 main();

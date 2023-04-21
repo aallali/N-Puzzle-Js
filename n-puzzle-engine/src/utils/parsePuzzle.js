@@ -43,12 +43,14 @@ const errorMessages = (key, message) => {
             return `${(message)} is too large number for this type of field`;
         case HAS_DUPLICATES:
             return `Field has duplicate number ${(message)}, please use unique numbers`;
+        default:
+            return `this key : (${key}) is not defined`
     }
 };
 
 const error = (key, message = "") => {
     const errorMessage = errorMessages(key, message);
-    console.log(errorMessage)
+    // console.log(errorMessage)
     return errorMessage
 };
 
@@ -108,18 +110,18 @@ const validateFile = (fileTxt) => {
 
 
         if (fileInfo.length - 1 !== dimension) {
-            return error(WRONG_NUMBER_ROWS);
+            throw error(WRONG_NUMBER_ROWS);
         }
         let array = [];
         for (let i = 1; i < fileInfo.length; i++) {
             if (fileInfo[i].length !== dimension) {
-                return error(WRONG_NUMBER_COLS);
+                throw error(WRONG_NUMBER_COLS);
             }
             array = [...array, ...fileInfo[i]];
         }
         const duplicate = hasDuplicates(array);
         if (duplicate !== undefined) {
-            return error(HAS_DUPLICATES, duplicate);
+            throw error(HAS_DUPLICATES, duplicate);
         }
         fileInfo.shift()
         return { valid: true, puzzle: fileInfo }

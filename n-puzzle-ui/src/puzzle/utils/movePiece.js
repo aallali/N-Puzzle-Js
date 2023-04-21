@@ -1,5 +1,6 @@
 
 export const movePiece = (x, y, complete, puzzle) => {
+    let dir = ""
     if (!complete) {
         if (checkNeighbours(x, y, 1, puzzle)) {
             const emptySlot = checkNeighbours(x, y, 1, puzzle);
@@ -10,23 +11,27 @@ export const movePiece = (x, y, complete, puzzle) => {
                 newPuzzle[emptySlot.x][emptySlot.y] = puzzle[x][y + 1];
                 newPuzzle[x][y + 1] = newPuzzle[x][y];
                 newPuzzle[x][y] = 0;
+                dir = "R"
             } else if (x === emptySlot.x && y > emptySlot.y) {
                 newPuzzle[emptySlot.x][emptySlot.y] = puzzle[x][y - 1];
                 newPuzzle[x][y - 1] = newPuzzle[x][y];
                 newPuzzle[x][y] = 0;
+                dir = "L"
             }
 
             if (y === emptySlot.y && x < emptySlot.x) {
                 newPuzzle[emptySlot.x][emptySlot.y] = puzzle[x + 1][y];
                 newPuzzle[x + 1][y] = newPuzzle[x][y];
                 newPuzzle[x][y] = 0;
+                dir = "D"
             } else if (y === emptySlot.y && x > emptySlot.x) {
                 newPuzzle[emptySlot.x][emptySlot.y] = puzzle[x - 1][y];
                 newPuzzle[x - 1][y] = newPuzzle[x][y];
                 newPuzzle[x][y] = 0;
+                dir = "U"
             }
 
-            return newPuzzle
+            return { puzzle: newPuzzle, dir }
             // check completion of the puzzle
 
         }

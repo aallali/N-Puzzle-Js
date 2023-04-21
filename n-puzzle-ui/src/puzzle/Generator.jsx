@@ -1,3 +1,5 @@
+import { PuzzleGenerator } from "./utils";
+
 export default function Generator({
   expanded,
   setSize,
@@ -7,7 +9,6 @@ export default function Generator({
   goal,
   setGoal,
   setPuzzle,
-  PuzzleGenerator,
 }) {
   return (
     <>
@@ -57,7 +58,7 @@ export default function Generator({
             className="confButton"
             onClick={() =>
               setPuzzle(
-                new PuzzleGenerator(size, goal, solvability, 100).map((l) =>
+                new PuzzleGenerator(size, goal, solvability, 10000).map((l) =>
                   l.map((c) => parseInt(c))
                 )
               )

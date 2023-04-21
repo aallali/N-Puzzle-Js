@@ -50,9 +50,32 @@
   - [ ] solvability checker
   - [ ] heuristics score
 - [x] add folder to contain different puzzle inputs file for testing
-- [ ] create an UI for n-puzzle using the package created in previous task (70%)
+- [x] create an UI for n-puzzle using the package created in previous task (99%)
 
-### Run the code :
+## n-puzzle-ui
+```
+npm install
+npm run build
+serve -s build
+```
+```shell
+n-puzzle-JS/n-puzzle-ui on  main [!] via ⬢ v14.21.0 
+➜ serve -s build
+   ┌──────────────────────────────────────────┐
+   │                                          │
+   │   Serving!                               │
+   │                                          │
+   │   - Local:    http://localhost:3000      │
+   │   - Network:  http://xxx.xxx.xx.x:3000   │
+   │                                          │
+   │   Copied local address to clipboard!     │
+   │                                          │
+   └──────────────────────────────────────────┘
+```
+then you can access it in your browser on localhost:3000
+
+## n-puzzle-engine
+##### Run the code :
 
 ```
 - npm install
@@ -60,7 +83,7 @@
 - npm run dev
 ```
 
-### Example of input/output:
+##### Example of input/output:
 
 - input of puzzle size 3x3, with no score (f) or path cost (g) counting, open all paths until solution using heapQ algorithm
 

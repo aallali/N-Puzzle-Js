@@ -4,21 +4,19 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
-var _utils = require("./utils");
+exports.obj = exports.default = void 0;
 var _node = _interopRequireDefault(require("./lib/node"));
 var _solver = _interopRequireDefault(require("./lib/solver"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-var _default = {
-  PuzzleGenerator: _utils.PuzzleGenerator,
-  parsePuzzle: _utils.parsePuzzle,
-  generateGoal: _utils.generateGoal,
+const obj = {
   Node: _node.default,
   Solver: _solver.default
 };
+exports.obj = obj;
+var _default = obj;
 exports.default = _default;
 
-},{"./lib/node":3,"./lib/solver":5,"./utils":7}],2:[function(require,module,exports){
+},{"./lib/node":3,"./lib/solver":5}],2:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -48,30 +46,42 @@ class HeapQueue {
 }
 exports.default = HeapQueue;
 
-},{"heapq":14}],3:[function(require,module,exports){
+},{"heapq":15}],3:[function(require,module,exports){
 "use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
+var _utils = require("../utils");
 class Node {
   constructor(puzzle, greedy, uniform, goal, parent, heuristics) {
     this.puzzle = puzzle;
+    this.greedy = greedy;
+    this.uniform = uniform;
     this.treeLevel = 0;
-    if (!greedy) {
-      if (parent === undefined) this.treeLevel = 0;else this.treeLevel = parent.treeLevel + 1;
-    }
-    this.hash = this.toHash(this.puzzle);
-    this.parent = parent && {
-      parent: parent.parent,
-      puzzle: parent.puzzle,
-      score: parent.score
-    };
     this.goal = goal;
+    this.hash = this.toHash(this.puzzle);
     this.isFinal = this.checkIfFinal();
+    this.parent = parent;
+    this.heuristics = heuristics;
+    this.score = 0;
+    this.initNode();
+  }
+  initNode() {
+    if (!this.greedy) {
+      if (this.parent === undefined) this.treeLevel = 0;else this.treeLevel = this.parent.treeLevel + 1;
+    }
+    this.parent = this.parent && {
+      parent: this.parent.parent,
+      puzzle: this.parent.puzzle,
+      g: this.parent.treeLevel,
+      h: this.parent.h
+    };
     this.childs = [];
-    this.score = this.treeLevel + (uniform ? 0 : this.calculateScore(heuristics));
-    this.genChilds(uniform, greedy, heuristics);
+    this.h = this.uniform ? 0 : this.calculateScore(this.heuristics);
+    this.score = this.treeLevel + this.h;
+    this.genChilds(this.uniform, this.greedy, this.heuristics);
   }
   toHash(twoDarray) {
     return (twoDarray || this.puzzle).map(row => row.join(".")).join(".");
@@ -81,7 +91,7 @@ class Node {
     let ready_scores = this.heuristics_in_one_loop();
     const heuristicsFunctions = {
       manhattan: () => ready_scores.manhattan,
-      linearConflicts: () => ready_scores.manhattan + 2 * this.heuristic_linear_conflicts(),
+      linearConflicts: () => ready_scores.manhattan * 1.5 + this.heuristic_linear_conflicts(),
       hamming: () => ready_scores.hamming,
       euclidean: () => ready_scores.euclidean,
       diagonal: () => ready_scores.diagonal,
@@ -101,7 +111,7 @@ class Node {
     for (let i = 0; i < size; i++) {
       for (let j = 0; j < size; j++) {
         const currentTile = this.puzzle[i][j];
-        const tileInGoal = this.findindexOf(this.goal, currentTile);
+        const tileInGoal = (0, _utils.findIndexOf)(this.goal, currentTile);
         const mirrorInGoal = this.goal[i][j];
         if (currentTile != "0") try {
           let d1 = Math.abs(i - tileInGoal.x);
@@ -131,10 +141,10 @@ class Node {
     const values = size * size;
     for (let i = 1; i < values - 1; i++) {
       for (let j = 2; j < values; j++) {
-        const currI = this.findindexOf(this.puzzle, i);
-        const currJ = this.findindexOf(this.puzzle, j);
-        const targI = this.findindexOf(this.goal, i);
-        const targJ = this.findindexOf(this.goal, j);
+        const currI = (0, _utils.findIndexOf)(this.puzzle, i);
+        const currJ = (0, _utils.findIndexOf)(this.puzzle, j);
+        const targI = (0, _utils.findIndexOf)(this.goal, i);
+        const targJ = (0, _utils.findIndexOf)(this.goal, j);
         if (currI.x === currJ.x && targI.x === targJ.x) if (currI.y < currJ.y && targI.y > targJ.y || currI.y > currJ.y && targI.y < targJ.y) conflicts++;
         if (currI.y === currJ.y && targI.y === targJ.y) if (currI.x < currJ.x && targI.x > targJ.x || currI.x > currJ.x && targI.x < targJ.x) conflicts++;
       }
@@ -147,7 +157,7 @@ class Node {
     const goal = JSON.parse(JSON.stringify(this.goal));
     const goalHash = this.toHash(goal);
     while (this.toHash(currentMap) != goalHash) {
-      const cmz = this.findindexOf(currentMap, "0");
+      const cmz = (0, _utils.findIndexOf)(currentMap, "0");
       if (goal[cmz.x][cmz.y] == "0") {
         for (let i = 0; i < this.puzzle.length; i++) for (let j = 0; j < this.puzzle.length; j++) if (currentMap[i][j] != goal[i][j]) {
           const tmp = currentMap[i][j];
@@ -157,7 +167,7 @@ class Node {
         }
       } else {
         const sv = goal[cmz.x][cmz.y];
-        const ci = this.findindexOf(currentMap, sv);
+        const ci = (0, _utils.findIndexOf)(currentMap, sv);
         const tmp = currentMap[cmz.x][cmz.y];
         currentMap[cmz.x][cmz.y] = currentMap[ci.x][ci.y];
         currentMap[ci.x][ci.y] = tmp;
@@ -185,22 +195,11 @@ class Node {
         y: 0
       }
     };
-    const zeroIdx = this.findindexOf(this.puzzle, "0");
+    const zeroIdx = (0, _utils.findIndexOf)(this.puzzle, "0");
     for (const dir in moves) {
       const newPuzzle = this.moveTile(zeroIdx, moves[dir], JSON.parse(JSON.stringify(this.puzzle)));
       if (newPuzzle) {
         this.childs.push([newPuzzle, g, u, heuristic]);
-      }
-    }
-  }
-  findindexOf(arr2D, trgt) {
-    const size = arr2D.length;
-    for (let i = 0; i < size; i++) {
-      for (let j = 0; j < size; j++) {
-        if (arr2D[i][j] == trgt) return {
-          x: i,
-          y: j
-        };
       }
     }
   }
@@ -221,7 +220,7 @@ class Node {
 }
 exports.default = Node;
 
-},{}],4:[function(require,module,exports){
+},{"../utils":8}],4:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -269,55 +268,153 @@ var _bloomfilter = require("bloomfilter");
 var _utils = require("../utils");
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 class Solver {
-  constructor(firstElement, queueType) {
-    this.visited = new _bloomfilter.BloomFilter(32 * 1024 * 40000, 32);
-    if (queueType == "heapQ") this.queue = new _heapQueue.default();else if (queueType == "priorityQ") this.queue = new _priorityQueue.default();else throw Error(`Please enter correct queue Type ["heapQ", "priorityQ"]`);
-    this.queue.enqueue(firstElement);
-    this.visited.add(firstElement.hash);
+  constructor(queueType) {
+    this.visited = [];
+    this.queue = [];
+    this.queueType = queueType;
     this.solution = null;
-    this.isSolvable = (0, _utils.is_solvable)(firstElement.puzzle, firstElement.goal, firstElement.puzzle.length);
+    this.isSolvable = false;
+    this.stats = {
+      count: 0,
+      time: 0
+    };
   }
-  async buildScenario() {
+  resetProps(firstElement) {
+    this.visited = new _bloomfilter.BloomFilter(32 * 1024 * 40000, 32);
+    if (this.queueType == "heapQ") this.queue = new _heapQueue.default();else if (this.queueType == "priorityQ") this.queue = new _priorityQueue.default();else throw Error(`Please enter correct queue Type ["heapQ", "priorityQ"]`);
+    this.solution = null;
+    this.stats = {
+      count: 0,
+      time: new Date()
+    };
+    if (firstElement) {
+      this.queue.enqueue(firstElement);
+    }
+  }
+  checkSolvability(currentState, targetState) {
+    return (0, _utils.is_solvable)(currentState, targetState, currentState.length);
+  }
+  buildScenario() {
     let steps = [];
     while (this.solution) {
-      steps.push([this.solution.puzzle, this.solution.score]);
+      steps.push([this.solution.puzzle, this.solution.h, this.solution.g || this.solution.treeLevel]);
       this.solution = this.solution.parent;
     }
     steps = steps.reverse();
+    this.getTheSteps(steps);
     return steps;
   }
-  async start() {
-    let count = 0;
-    const startTime = new Date();
-    while (!this.solution && !this.queue.isEmpty()) {
-      const currentPuzzle = this.queue.dequeue();
-      currentPuzzle.wakeUpChilds();
-      count++;
-      if (currentPuzzle.isFinal) {
-        this.solution = currentPuzzle;
-        break;
+  getTheSteps(steps) {
+    const moves = {
+      "01": "R",
+      "-10": "U",
+      "0-1": "L",
+      "10": "D"
+    };
+    for (let i = 1; i < steps.length; i++) {
+      const [s1, s2] = [steps[i][0], steps[i - 1][0]];
+      const [e1, e2] = [(0, _utils.findIndexOf)(s1, "0"), (0, _utils.findIndexOf)(s2, "0")];
+      steps[i][3] = moves[`${e1.x - e2.x}${e1.y - e2.y}`];
+    }
+  }
+  async start_ASTAR(max_iter = +Infinity, firstNode) {
+    this.resetProps(firstNode);
+    function _logic() {
+      if (this.stats.count > max_iter) {
+        return -1;
       }
-      for (let i = 0; i < currentPuzzle.childs.length; i++) {
-        const child = currentPuzzle.childs[i];
-        if (!this.visited.test(child.hash)) {
-          this.visited.add(child.hash);
-          this.queue.enqueue(child);
+      while (!this.solution && !this.queue.isEmpty()) {
+        const currentPuzzle = this.queue.dequeue();
+        this.visited.add(currentPuzzle.hash);
+        this.stats.count++;
+        if (currentPuzzle.isFinal) {
+          this.solution = currentPuzzle;
+          break;
+        }
+        currentPuzzle.wakeUpChilds();
+        for (let i = 0; i < currentPuzzle.childs.length; i++) {
+          const child = currentPuzzle.childs[i];
+          if (!this.visited.test(child.hash)) {
+            this.visited.add(child.hash);
+            this.queue.enqueue(child);
+          }
         }
       }
+      const steps = this.buildScenario();
+      return {
+        steps,
+        cTime: this.stats.count,
+        cSize: this.queue.maxOpen,
+        time: new Date() - this.stats.time
+      };
     }
-    const time = new Date() - startTime;
-    const steps = await this.buildScenario();
-    return {
-      steps,
-      cTime: count,
-      cSize: this.queue.maxOpen,
-      time
-    };
+    const result = _logic.bind(this)();
+    this.resetProps();
+    return result;
+  }
+  async start_BFS(max_iter = +Infinity, firstNode) {
+    firstNode.greedy = false;
+    firstNode.uniform = true;
+    firstNode.initNode();
+    return this.start_ASTAR(max_iter, firstNode);
+  }
+  async start_DFS(max_iter = Infinity, firstNode) {
+    this.resetProps(firstNode);
+    async function _logic(max_iter, firstNode) {
+      if (this.stats.count > max_iter) {
+        return -1;
+      }
+      this.stats.count++;
+      if (firstNode.isFinal) {
+        this.solution = firstNode;
+        return {
+          steps: this.buildScenario(),
+          cTime: this.stats.count,
+          cSize: this.queue.maxOpen,
+          time: new Date() - this.stats.time
+        };
+      }
+      firstNode.wakeUpChilds();
+      firstNode.childs.sort((a, b) => a.score - b.score);
+      for (let i = 0; i < firstNode.childs.length; i++) {
+        const child = firstNode.childs[i];
+        if (!this.visited.test(child.hash)) {
+          this.visited.add(child.hash);
+          const res = await _logic.bind(this)(max_iter, child);
+          if (res != null) return res;
+        }
+      }
+      return null;
+    }
+    const result = await _logic.bind(this)(max_iter, firstNode);
+    this.resetProps();
+    return result;
   }
 }
 exports.default = Solver;
 
-},{"../utils":7,"./heapQueue":2,"./priorityQueue":4,"bloomfilter":13}],6:[function(require,module,exports){
+},{"../utils":8,"./heapQueue":2,"./priorityQueue":4,"bloomfilter":14}],6:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+function findindexOf(arr2D, trgt) {
+  const size = arr2D.length;
+  for (let i = 0; i < size; i++) {
+    for (let j = 0; j < size; j++) {
+      if (arr2D[i][j] == trgt) return {
+        x: i,
+        y: j
+      };
+    }
+  }
+}
+var _default = findindexOf;
+exports.default = _default;
+
+},{}],7:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -394,7 +491,7 @@ var _default = {
 };
 exports.default = _default;
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -410,6 +507,12 @@ Object.defineProperty(exports, "blok", {
   enumerable: true,
   get: function () {
     return _timeBlok.default;
+  }
+});
+Object.defineProperty(exports, "findIndexOf", {
+  enumerable: true,
+  get: function () {
+    return _findIndexOf.default;
   }
 });
 Object.defineProperty(exports, "generateGoal", {
@@ -442,22 +545,133 @@ var _puzzlePrinter = _interopRequireDefault(require("./puzzlePrinter"));
 var _timeBlok = _interopRequireDefault(require("./timeBlok"));
 var _puzzleGenerator = _interopRequireDefault(require("./puzzleGenerator"));
 var _solvability = _interopRequireDefault(require("./solvability"));
+var _findIndexOf = _interopRequireDefault(require("./findIndexOf"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-},{"./goalGenerator.js":6,"./parsePuzzle.js":8,"./puzzleGenerator":9,"./puzzlePrinter":10,"./solvability":11,"./timeBlok":12}],8:[function(require,module,exports){
+},{"./findIndexOf":6,"./goalGenerator.js":7,"./parsePuzzle.js":9,"./puzzleGenerator":10,"./puzzlePrinter":11,"./solvability":12,"./timeBlok":13}],9:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
-function parsePuzzle(inputFileTxt) {
-  return inputFileTxt.split("\n").filter(line => /^([\d+| ]+)(\d{1,2})+$/.test(line)).map(l => l.split(" ").filter(l => l)).filter(l => l && l.length > 1);
-}
-var _default = parsePuzzle;
+const FILE_NOT_EXIST = "FILE_NOT_EXIST";
+const DIFFERS_ROWS_AND_COLUMNS = "DIFFERS_ROWS_AND_COLUMNS";
+const EMPTY_FILE = "EMPTY_FILE";
+const EMPTY_ROW = "EMPTY_ROW";
+const INVALID_ROW = "INVALID_ROW";
+const INVALID_DIMENSION = "INVALID_DIMENSION";
+const WRONG_NUMBER_ROWS = "WRONG_NUMBER_ROWS";
+const WRONG_NUMBER_COLS = "WRONG_NUMBER_COLS";
+const LOW_DIMENSION = "LOW_DIMENSION";
+const NO_LAST_EMPTY_LINE = "NO_LAST_EMPTY_LINE";
+const TOO_LARGE_NUMBER = "TOO_LARGE_NUMBER";
+const HAS_DUPLICATES = "HAS_DUPLICATES";
+const errorMessages = (key, message) => {
+  switch (key) {
+    case FILE_NOT_EXIST:
+      return `File ${message} not exist`;
+    case DIFFERS_ROWS_AND_COLUMNS:
+      return "Number of rows differs from number of columns";
+    case EMPTY_FILE:
+      return "Empty file is not allowed";
+    case EMPTY_ROW:
+      return "Empty row is not allowed. Please remove all empty rows in a file";
+    case INVALID_ROW:
+      return `Invalid row ${message}. Please use only digits or comment in the end of the row`;
+    case INVALID_DIMENSION:
+      return `Please use only one number for dimension, ${message} invalid`;
+    case WRONG_NUMBER_ROWS:
+      return "Dimension not equal number of rows";
+    case WRONG_NUMBER_COLS:
+      return "Dimension not equal number of cols";
+    case LOW_DIMENSION:
+      return "Dimension is too low, should be greater than 3";
+    case NO_LAST_EMPTY_LINE:
+      return "Please add empty line to the end of the file";
+    case TOO_LARGE_NUMBER:
+      return `${message} is too large number for this type of field`;
+    case HAS_DUPLICATES:
+      return `Field has duplicate number ${message}, please use unique numbers`;
+    default:
+      return `this key : (${key}) is not defined`;
+  }
+};
+const error = (key, message = "") => {
+  const errorMessage = errorMessages(key, message);
+  return errorMessage;
+};
+const validateFile = fileTxt => {
+  try {
+    const fileStr = fileTxt;
+    if (fileStr.length === 0) {
+      return error(EMPTY_FILE);
+    }
+    const splitedStr = fileStr.split("\n");
+    splitedStr.forEach((row, index) => {
+      if (row.length === 0 && index !== splitedStr.length - 1) {
+        return error(EMPTY_ROW);
+      }
+      if (index === splitedStr.length - 1 && row.length > 0) {
+        return error(NO_LAST_EMPTY_LINE);
+      }
+    });
+    let dimension = undefined;
+    let fileInfo = fileStr.replace(/#.+($|\n)/g, "$1").split("\n").filter(row => row.length > 0).map((row, index) => {
+      if (index === 0) {
+        dimension = Number(row);
+        if (!dimension) {
+          throw error(INVALID_DIMENSION, row);
+        }
+        if (dimension < 3) {
+          throw error(LOW_DIMENSION);
+        }
+      }
+      if (index === 0 && !/[0-9]*/.test(row)) {
+        throw error(INVALID_ROW, row);
+      }
+      return row.split(/\s+/g).filter(x => x.length).map(cell => {
+        if (index > 0 && /[^0-9]/.test(cell)) {
+          throw error(INVALID_ROW, row);
+        }
+        const number = Number(cell);
+        if (number > dimension * dimension - 1) {
+          throw error(TOO_LARGE_NUMBER, number);
+        }
+        return number;
+      });
+    });
+    if (fileInfo.length - 1 !== dimension) {
+      throw error(WRONG_NUMBER_ROWS);
+    }
+    let array = [];
+    for (let i = 1; i < fileInfo.length; i++) {
+      if (fileInfo[i].length !== dimension) {
+        throw error(WRONG_NUMBER_COLS);
+      }
+      array = [...array, ...fileInfo[i]];
+    }
+    const duplicate = hasDuplicates(array);
+    if (duplicate !== undefined) {
+      throw error(HAS_DUPLICATES, duplicate);
+    }
+    fileInfo.shift();
+    return {
+      valid: true,
+      puzzle: fileInfo
+    };
+  } catch (error) {
+    return {
+      valid: false,
+      error
+    };
+  }
+};
+const hasDuplicates = array => array.find((element, index) => array.indexOf(element) !== index);
+var _default = validateFile;
 exports.default = _default;
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -479,8 +693,8 @@ class PuzzleGenerator {
     while (iters) {
       for (let i = 0; i < multArr.length; i++) {
         for (let j = 0; j < multArr[i].length; j++) {
-          let i1 = Math.floor(Math.random() * (multArr.length / 2));
-          let j1 = Math.floor(Math.random() * (multArr.length / 2));
+          let i1 = Math.floor(Math.random() * multArr.length);
+          let j1 = Math.floor(Math.random() * multArr.length);
           [multArr[i][j], multArr[i1][j1]] = [multArr[i1][j1], multArr[i][j]];
           iters--;
           if (iters <= 0) break;
@@ -496,7 +710,7 @@ class PuzzleGenerator {
 var _default = PuzzleGenerator;
 exports.default = _default;
 
-},{"./goalGenerator":6,"./solvability":11}],10:[function(require,module,exports){
+},{"./goalGenerator":7,"./solvability":12}],11:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -523,7 +737,7 @@ function printPuzzle(puzzleMap, score) {
   log("================");
 }
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -557,7 +771,7 @@ function is_solvable(puzzle, solved, size) {
 var _default = is_solvable;
 exports.default = _default;
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -572,7 +786,7 @@ function blok(s) {
   });
 }
 
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 (function(exports) {
   exports.BloomFilter = BloomFilter;
   exports.fnv_1a = fnv_1a;
@@ -689,7 +903,7 @@ function blok(s) {
   }
 })(typeof exports !== "undefined" ? exports : this);
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 'use strict';
 
 //

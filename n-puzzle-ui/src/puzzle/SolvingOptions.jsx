@@ -1,9 +1,9 @@
+/* eslint-disable eqeqeq */
 export default function SolvingOptions({
   expanded,
   solvingOptions,
   updateSolvingOptions,
   addOrRemove,
-  setQType,
   runSolver,
   stopSolver,
   worker,
@@ -18,18 +18,42 @@ export default function SolvingOptions({
             </button>
           )) || (
             <div className="expanded">
-              {!solvingOptions.uniform ? (
+              <div>
+                <b>Search Algorithm:</b>
+                <select
+                  name="algo"
+                  id="algo"
+                  value={solvingOptions.algorithm}
+                  onChange={(e) =>
+                    updateSolvingOptions((prev) => ({
+                      ...prev,
+                      algorithm: e.target.value,
+                    }))
+                  }
+                >
+                  <option value="ASTAR">A*</option>
+                  {solvingOptions.size == 3 && (
+                    <>
+                      {" "}
+                      <option value="BFS">BFS</option>
+                      <option value="DFS">DFS</option>
+                    </>
+                  )}
+                </select>
+              </div>
+              {!solvingOptions.uniform && solvingOptions.algorithm != "BFS" ? (
                 <Heuristics
                   solvingOptions={solvingOptions}
                   updateSolvingOptions={updateSolvingOptions}
                   addOrRemove={addOrRemove}
                 />
               ) : null}
+
               <AlgoOptions
                 solvingOptions={solvingOptions}
                 updateSolvingOptions={updateSolvingOptions}
-                setQType={setQType}
               />
+
               <button className="confButton" onClick={runSolver}>
                 Solve
               </button>
@@ -41,44 +65,55 @@ export default function SolvingOptions({
   );
 }
 
-function AlgoOptions({ solvingOptions, updateSolvingOptions, setQType }) {
+function AlgoOptions({ solvingOptions, updateSolvingOptions }) {
   return (
     <>
-      <b>Algo Options:</b>
-      <div>
-        <input
-          name="greedy"
-          type="checkbox"
-          defaultChecked={solvingOptions.greedy}
-          onChange={(e) =>
-            updateSolvingOptions((prev) => ({
-              ...prev,
-              greedy: e.target.checked,
-            }))
-          }
-        />
-        <label htmlFor="greedy">Greedy</label>
-      </div>
-      <div>
-        <input
-          name="uniform"
-          type="checkbox"
-          defaultChecked={solvingOptions.uniform}
-          onChange={(e) =>
-            updateSolvingOptions((prev) => ({
-              ...prev,
-              uniform: e.target.checked,
-            }))
-          }
-        />
-        <label htmlFor="uniform">Uniform</label>
-      </div>
+      {solvingOptions.algorithm == "ASTAR" && (
+        <>
+          <b>Algo Options:</b>
+          <div>
+            <input
+              name="greedy"
+              type="checkbox"
+              checked={solvingOptions.greedy}
+              onChange={(e) =>
+                updateSolvingOptions((prev) => ({
+                  ...prev,
+                  greedy: e.target.checked,
+                }))
+              }
+            />
+            <label htmlFor="greedy">Greedy</label>
+          </div>
+          <div>
+            <input
+              name="uniform"
+              type="checkbox"
+              checked={solvingOptions.uniform}
+              onChange={(e) =>
+                updateSolvingOptions((prev) => ({
+                  ...prev,
+                  uniform: e.target.checked,
+                }))
+              }
+            />
+            <label htmlFor="uniform">Uniform</label>
+          </div>
+        </>
+      )}
+
       <div>
         <b>Queue Type:</b>
         <select
           name="qtype"
           id="qtype"
-          onChange={(e) => setQType(e.target.value)}
+          defaultValue={solvingOptions.queueType}
+          onChange={(e) =>
+            updateSolvingOptions((prev) => ({
+              ...prev,
+              queueType: e.target.value,
+            }))
+          }
         >
           <option value="priorityQ">Priority Queue</option>
           <option value="heapQ">heap Queue</option>

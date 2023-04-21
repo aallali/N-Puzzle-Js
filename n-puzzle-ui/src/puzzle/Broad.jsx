@@ -1,10 +1,18 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable eqeqeq */
 import React, { useState, useEffect } from "react";
 
 import SinglePuzzle from "./SinglePuzzle";
 import SolutionTable from "./SolutionTable";
 
 import { movePiece } from "./utils/movePiece";
-import { addOrRemove, PuzzleGenerator, generateGoal } from "./utils";
+import {
+  addOrRemove,
+  PuzzleGenerator,
+  generateGoal,
+  parsePuzzleText,
+} from "./utils";
 import SolvingOptions from "./SolvingOptions";
 import Generator from "./Generator";
 
@@ -20,13 +28,15 @@ const defaultPuzzlTxt = `
 1 3 6
 7 5 8
 `;
-export default function PuzzleBoard({}) {
+function toHash(twoDarray) {
+  return twoDarray.map((row) => row.join(".")).join(".");
+}
+export default function PuzzleBoard() {
   const [worker, initWorker] = useState(undefined);
   const [puzzle, setPuzzle] = useState([]);
-  const [goal, setGoal] = useState("snail");
-  const [size, setSize] = useState(3);
-  const [qType, setQType] = useState("priorityQ");
+  const [puzzleText, setPuzzTxt] = useState(defaultPuzzlTxt);
   const [solvability, setSolvability] = useState(true);
+  const [complete, updateComplete] = useState(false);
   const [play, isPlay] = useState({
     states: [],
     playIt: false,
@@ -34,10 +44,16 @@ export default function PuzzleBoard({}) {
   });
   const [solution, setSolution] = useState();
   const [solvingOptions, updateSolvingOptions] = useState({
+    algorithm: "ASTAR",
     heuristics: ["linearConflicts"],
     greedy: false,
     uniform: false,
+    goal: "zFirst",
+    size: 3,
+    queueType: "priorityQ", // "heapQ" or "priorityQ"
   });
+  const [solvOptionsClon, setSolvOptionsClon] = useState();
+
   const [expanded, setExpanded] = useState({
     import: false,
     generate: true,
@@ -45,13 +61,63 @@ export default function PuzzleBoard({}) {
   });
 
   useEffect(() => {
+    if (
+      solvingOptions.uniform &&
+      !solvingOptions.greedy &&
+      solvingOptions.algorithm !== "BFS"
+    )
+      updateSolvingOptions((prev) => ({ ...prev, algorithm: "BFS" }));
+  }, [solvingOptions.greedy, solvingOptions.uniform]);
+
+  useEffect(() => {
+    switch (solvingOptions.algorithm) {
+      case "ASTAR":
+        updateSolvingOptions((prev) => ({
+          ...prev,
+          greedy: false,
+          uniform: false,
+          queueType: "priorityQ",
+        }));
+        break;
+      case "BFS":
+        updateSolvingOptions((prev) => ({
+          ...prev,
+          greedy: false,
+          uniform: true,
+          queueType: "heapQ",
+        }));
+        break;
+      case "DFS":
+        updateSolvingOptions((prev) => ({
+          ...prev,
+          greedy: true,
+          uniform: false,
+          queueType: "priorityQ",
+        }));
+        break;
+      default:
+        updateSolvingOptions((prev) => ({
+          ...prev,
+          greedy: false,
+          uniform: false,
+          queueType: "priorityQ",
+        }));
+        break;
+    }
+  }, [solvingOptions.algorithm]);
+
+  useEffect(() => {
     isPlay((prev) => ({ ...prev, playIt: false }));
     setSolution(undefined);
+
     if (
       puzzle.length &&
       (typeof puzzle[0][0] === "string" || puzzle[0][0] instanceof String)
-    )
+    ) {
       setPuzzle(puzzle.map((l) => l.map((c) => parseInt(c))));
+      updateComplete(toHash(puzzle) == toHash(solvingOptions.goal));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [puzzle]);
 
   useEffect(() => {
@@ -67,7 +133,7 @@ export default function PuzzleBoard({}) {
         ...prev,
         import: !solution,
         generate: !solution,
-        solver: !solution,
+        solver: !!solution,
       }));
       // playSolution();
     }
@@ -76,42 +142,54 @@ export default function PuzzleBoard({}) {
 
   useEffect(() => {
     setPuzzle(
-      new PuzzleGenerator(size, goal, true, 1000).map((l) =>
-        l.map((c) => parseInt(c))
-      )
+      new PuzzleGenerator(
+        solvingOptions.size,
+        solvingOptions.goal,
+        true,
+        1000
+      ).map((l) => l.map((c) => parseInt(c)))
     );
-  }, [size, goal]);
+    updateSolvingOptions((prev) => ({ ...prev, algorithm: "ASTAR" }));
+  }, [solvingOptions.size, solvingOptions.goal]);
 
+  /**
+   * run worker
+   */
   useEffect(() => {
     if (worker) {
       worker.onmessage = (e) => {
-        setSolution(e.data);
-        isPlay({
-          states: e.data.steps,
-          playIt: true,
-          idx: 0,
-        });
-
-        worker.terminate();
-        initWorker(undefined);
+        if (e.data.error) {
+          alert(e.data.error);
+        } else {
+          setSolution(e.data);
+          isPlay({
+            states: e.data.steps,
+            playIt: true,
+            idx: 0,
+          });
+          setSolvOptionsClon(solvingOptions);
+          stopWorker();
+        }
       };
 
       worker.postMessage({
+        algorithm: solvingOptions.algorithm,
+        goal: solvingOptions.goal,
         initPuzzleNode: [
           puzzle.map((l) => l.map((c) => c.toString())),
           solvingOptions.greedy,
           solvingOptions.uniform,
-          generateGoal[goal](size),
+          generateGoal[solvingOptions.goal](solvingOptions.size),
           undefined,
           solvingOptions.heuristics,
         ],
-        qType,
+        qType: solvingOptions.queueType,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [worker]);
 
-  function onMovePiece(i, j) {
+  function onMovePiece(e, i, j) {
     const newPuzzle = movePiece(
       i,
       j,
@@ -120,8 +198,10 @@ export default function PuzzleBoard({}) {
         ? play.states[play.idx][0].map((r) => r.map((c) => parseInt(c)))
         : puzzle
     );
+
     if (newPuzzle) {
-      setPuzzle(newPuzzle);
+      setPuzzle(newPuzzle.puzzle);
+      return newPuzzle.dir;
     }
   }
   async function runSolver() {
@@ -129,7 +209,12 @@ export default function PuzzleBoard({}) {
     setSolution(null);
     initWorker(new Worker("worker.js"));
   }
-
+  function importPuzzleTxt() {
+    const result = parsePuzzleText(puzzleText);
+    if (result.valid) {
+      setPuzzle(result.puzzle);
+    } else alert(result.error);
+  }
   function stopWorker() {
     worker.terminate();
     initWorker(undefined);
@@ -145,7 +230,7 @@ export default function PuzzleBoard({}) {
                 setExpanded((prev) => ({ ...prev, import: !prev.import }))
               }
             >
-              Import puzzle {!expanded.import && "(clickme)"}:
+              Import puzzle {!expanded.import && "(click)"}:
             </legend>
             {expanded.import ? (
               <div className="expanded">
@@ -155,11 +240,15 @@ export default function PuzzleBoard({}) {
                     name="puzzleTxt"
                     rows="12"
                     cols="40"
-                    defaultValue={defaultPuzzlTxt}
+                    // defaultValue={puzzleText}
+                    value={puzzleText}
+                    onChange={(event) => setPuzzTxt(event.target.value)}
                   />
                 </div>
                 <div className="row">
-                  <button className="confButton">Import</button>
+                  <button className="confButton" onClick={importPuzzleTxt}>
+                    Import
+                  </button>
                 </div>
               </div>
             ) : null}
@@ -172,18 +261,27 @@ export default function PuzzleBoard({}) {
                 setExpanded((prev) => ({ ...prev, generate: !prev.generate }))
               }
             >
-              Generate Puzzle {!expanded.generate && "(clickme)"}:
+              Generate Puzzle {!expanded.generate && "(click)"}:
             </legend>
             <Generator
               expanded={expanded.generate}
-              setSize={setSize}
-              size={size}
+              setSize={(v) =>
+                updateSolvingOptions((prev) => ({
+                  ...prev,
+                  size: v,
+                }))
+              }
+              size={solvingOptions.size}
               solvability={solvability}
               setSolvability={setSolvability}
-              goal={goal}
-              setGoal={setGoal}
+              goal={solvingOptions.goal}
+              setGoal={(v) =>
+                updateSolvingOptions((prev) => ({
+                  ...prev,
+                  goal: v,
+                }))
+              }
               setPuzzle={setPuzzle}
-              PuzzleGenerator={PuzzleGenerator}
             />
           </fieldset>
         </div>
@@ -195,14 +293,13 @@ export default function PuzzleBoard({}) {
                   setExpanded((prev) => ({ ...prev, solver: !prev.solver }))
                 }
               >
-                Solver {!expanded.solver && "(clickme)"}:
+                Solver {!expanded.solver && "(click)"}:
               </legend>
               <SolvingOptions
                 expanded={expanded.solver}
                 solvingOptions={solvingOptions}
                 updateSolvingOptions={updateSolvingOptions}
                 addOrRemove={addOrRemove}
-                setQType={setQType}
                 runSolver={runSolver}
                 stopSolver={stopWorker}
                 worker={worker}
@@ -215,7 +312,7 @@ export default function PuzzleBoard({}) {
             <div>
               <SolutionTable
                 solution={solution}
-                solvingOptions={solvingOptions}
+                solvingOptions={solvOptionsClon}
               />
             </div>
           </div>
@@ -296,8 +393,8 @@ export default function PuzzleBoard({}) {
             }}
           ></div>
           <SinglePuzzle
-            puzzle={generateGoal[goal](size).map((l) =>
-              l.map((c) => parseInt(c))
+            puzzle={generateGoal[solvingOptions.goal](solvingOptions.size).map(
+              (l) => l.map((c) => parseInt(c))
             )}
             onMovePiece={movePiece}
             complete={true}

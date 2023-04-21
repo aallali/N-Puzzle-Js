@@ -1,4 +1,5 @@
 /* eslint-disable no-empty-pattern */
+/* eslint-disable eqeqeq */
 
 export default function SolutionTable({
   solution,
@@ -37,7 +38,11 @@ export default function SolutionTable({
             </tr> */}
             <tr>
               <td>Algorithm</td>
-              <td> A* (a star)</td>
+              <td>{solvingOptions.algorithm}</td>
+            </tr>
+            <tr>
+              <td>Queue</td>
+              <td>{solvingOptions.queueType}</td>
             </tr>
             <tr>
               <td>heuristics</td>

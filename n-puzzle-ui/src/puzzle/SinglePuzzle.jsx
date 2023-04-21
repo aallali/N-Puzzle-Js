@@ -1,4 +1,28 @@
 /* eslint-disable eqeqeq */
+
+// animation
+// transition: 0.5s;
+// transform: translate(0px, 65px); bottom
+// transform: translate(0px, -65px); top
+// transform: translate(65px, 0px); right
+// transform: translate(-65px, 0px); left
+
+// TODO : add animation on move
+// eslint-disable-next-line no-unused-vars
+function getSlideAnimationDirection(dir) {
+  switch (dir) {
+    case "U":
+      return "translate(0px, -65px)";
+    case "D":
+      return "translate(0px, 65px)";
+    case "R":
+      return "translate(65px, 0px)";
+    case "L":
+      return "translate(-65px, 0px)";
+    default:
+      return;
+  }
+}
 export function SinglePuzzle({ puzzle, complete, onMovePiece }) {
   return (
     <div
@@ -21,10 +45,13 @@ export function SinglePuzzle({ puzzle, complete, onMovePiece }) {
           {row.map((col, j) => {
             const color =
               col === 0 || col == "0" ? "transparent" : "rgb(211 211 211)";
+
             return (
               <div
-                key={`${i}-${j}`}
-                onClick={() => (complete ? null : onMovePiece(i, j))}
+                key={`tile-${i}-${j}`}
+                onClick={(e) => {
+                  return complete ? null : onMovePiece(e, i, j);
+                }}
                 style={{
                   display: "flex",
                   justifyContent: "center",
@@ -36,13 +63,14 @@ export function SinglePuzzle({ puzzle, complete, onMovePiece }) {
                   borderRadius: 5,
                   cursor: complete ? "not-allowed" : "pointer",
                   userSelect: "none",
+                  transition: "0.2s",
+                  // transform: getSlideAnimationDirection("L"),
                 }}
               >
                 <span
                   style={{
                     fontSize: "1.3rem",
                     fontWeight: "bolder",
-                    // color: "white",
                   }}
                 >
                   {col !== 0 && col !== "0" && col}

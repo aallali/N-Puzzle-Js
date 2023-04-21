@@ -160,6 +160,7 @@ export default function PuzzleBoard() {
       worker.onmessage = (e) => {
         if (e.data.error) {
           alert(e.data.error);
+          setSolvOptionsClon(undefined);
         } else {
           setSolution(e.data);
           isPlay({

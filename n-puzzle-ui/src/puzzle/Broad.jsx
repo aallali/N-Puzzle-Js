@@ -141,15 +141,21 @@ export default function PuzzleBoard() {
   }, [solution]);
 
   useEffect(() => {
-    setPuzzle(
-      new PuzzleGenerator(
-        solvingOptions.size,
-        solvingOptions.goal,
-        true,
-        1000
-      ).map((l) => l.map((c) => parseInt(c)))
-    );
-    updateSolvingOptions((prev) => ({ ...prev, algorithm: "ASTAR" }));
+    if (solvingOptions.size != puzzle.length)
+      setPuzzle(
+        new PuzzleGenerator(
+          solvingOptions.size,
+          solvingOptions.goal,
+          true,
+          1000
+        ).map((l) => l.map((c) => parseInt(c)))
+      );
+    updateSolvingOptions((prev) => ({
+      ...prev,
+      algorithm: "ASTAR",
+      uniform: false,
+      greedy: false,
+    }));
   }, [solvingOptions.size, solvingOptions.goal]);
 
   /**
@@ -158,9 +164,9 @@ export default function PuzzleBoard() {
   useEffect(() => {
     if (worker) {
       worker.onmessage = (e) => {
-        if (e.data.error) {
-          alert(e.data.error);
+        if (e.data?.error) {
           setSolvOptionsClon(undefined);
+          alert(e.data.error);
         } else {
           setSolution(e.data);
           isPlay({
@@ -169,8 +175,8 @@ export default function PuzzleBoard() {
             idx: 0,
           });
           setSolvOptionsClon(solvingOptions);
-          stopWorker();
         }
+        stopWorker();
       };
 
       worker.postMessage({
@@ -214,6 +220,7 @@ export default function PuzzleBoard() {
     const result = parsePuzzleText(puzzleText);
     if (result.valid) {
       setPuzzle(result.puzzle);
+      updateSolvingOptions((prev) => ({ ...prev, size: result.puzzle.length }));
     } else alert(result.error);
   }
   function stopWorker() {
@@ -346,7 +353,15 @@ export default function PuzzleBoard() {
 
             {solution && play.playIt && (
               <>
-                <p>Score g() + h(): {play.states[play.idx][1]}</p>
+                <p>
+                  Score :<br />
+                  = g(node) + h(node):
+                  <br />= {play.states[play.idx][2] || 0}
+                  {" + "}
+                  {parseFloat(play.states[play.idx][1].toFixed(2))}
+                </p>
+                <br />={" "}
+                {(play.states[play.idx][2] || 0) + play.states[play.idx][1]}
                 <div style={{ display: "flex" }}>
                   <button
                     className="confButton"
@@ -361,7 +376,7 @@ export default function PuzzleBoard() {
                     Prev
                   </button>
                   <p style={{ padding: 5 }}>
-                    {play.idx + 1}/{play.states.length}
+                    {play.idx}/{play.states.length - 1}
                   </p>
                   <button
                     className="confButton"

@@ -24,6 +24,11 @@ function getSlideAnimationDirection(dir) {
   }
 }
 export function SinglePuzzle({ puzzle, complete, onMovePiece }) {
+  let tileSize = 65;
+  if (puzzle.length == 4) tileSize = 47.75;
+  else if (puzzle.length == 5) tileSize = 47;
+
+ 
   return (
     <div
       style={{
@@ -56,14 +61,14 @@ export function SinglePuzzle({ puzzle, complete, onMovePiece }) {
                   display: "flex",
                   justifyContent: "center",
                   alignItems: "center",
-                  width: 59,
-                  height: 59,
+                  width: tileSize,
+                  height: tileSize,
                   margin: 2,
                   backgroundColor: color,
                   borderRadius: 5,
                   cursor: complete ? "not-allowed" : "pointer",
                   userSelect: "none",
-                  transition: "0.2s",
+                  // transition: "0.2s",
                   // transform: getSlideAnimationDirection("L"),
                 }}
               >

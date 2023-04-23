@@ -77,10 +77,12 @@ function AlgoOptions({ solvingOptions, updateSolvingOptions }) {
               type="checkbox"
               checked={solvingOptions.greedy}
               onChange={(e) =>
-                updateSolvingOptions((prev) => ({
-                  ...prev,
-                  greedy: e.target.checked,
-                }))
+                updateSolvingOptions((prev) => {
+                  return {
+                    ...prev,
+                    greedy: e.target.checked,
+                  };
+                })
               }
             />
             <label htmlFor="greedy">Greedy</label>
@@ -91,10 +93,17 @@ function AlgoOptions({ solvingOptions, updateSolvingOptions }) {
               type="checkbox"
               checked={solvingOptions.uniform}
               onChange={(e) =>
-                updateSolvingOptions((prev) => ({
-                  ...prev,
-                  uniform: e.target.checked,
-                }))
+                updateSolvingOptions((prev) => {
+                  if (solvingOptions.size == 3)
+                    return {
+                      ...prev,
+                      uniform: e.target.checked,
+                    };
+                  alert(
+                    "Sorry, you can't use UNIFORM search with puzzle's size bigger than 3, it will take forever to solve."
+                  );
+                  return prev;
+                })
               }
             />
             <label htmlFor="uniform">Uniform</label>

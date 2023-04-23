@@ -320,10 +320,10 @@ class Solver {
   async start_ASTAR(max_iter = +Infinity, firstNode) {
     this.resetProps(firstNode);
     function _logic() {
-      if (this.stats.count > max_iter) {
-        return -1;
-      }
       while (!this.solution && !this.queue.isEmpty()) {
+        if (this.stats.count > max_iter) {
+          return -1;
+        }
         const currentPuzzle = this.queue.dequeue();
         this.visited.add(currentPuzzle.hash);
         this.stats.count++;
@@ -361,6 +361,7 @@ class Solver {
   async start_DFS(max_iter = Infinity, firstNode) {
     this.resetProps(firstNode);
     async function _logic(max_iter, firstNode) {
+      this.visited.add(firstNode.hash);
       if (this.stats.count > max_iter) {
         return -1;
       }
@@ -379,7 +380,6 @@ class Solver {
       for (let i = 0; i < firstNode.childs.length; i++) {
         const child = firstNode.childs[i];
         if (!this.visited.test(child.hash)) {
-          this.visited.add(child.hash);
           const res = await _logic.bind(this)(max_iter, child);
           if (res != null) return res;
         }

@@ -398,6 +398,8 @@ export default function PuzzleBoard() {
             )}
           </div>
         </fieldset>
+      </div>
+      <div className="container config">
         <fieldset>
           <legend>Goal State:</legend>
 
